@@ -12,4 +12,34 @@ datasource db {
   provider = "postgresql"
 }
 
+model ElectricalRequest {
+  id           String   @id @default(uuid())
+  requestNo    String?  @unique @map("request_no")
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  phone        String
+  phone2       String?  @map("phone_2")
+  address      String
+  subDistrict  String   @map("sub_district")
+  district     String
+  province     String   @default("ลพบุรี")
+  lat          Decimal? @db.Decimal(10, 7)
+  long         Decimal? @db.Decimal(10, 7)
+  description  String?  @db.Text
+  requestDate  DateTime @map("request_date") @db.Date
+  requestType  String   @map("request_type")
+  meterOption  String?  @map("meter_option")
+  caRefNo      String?  @map("ca_ref_no")
+  peaNo        String?  @map("pea_no")
+  status       String   @default("รับเรื่อง")
+  isFollowUp   Boolean  @default(false) @map("is_follow_up")
+  targetDate   DateTime? @map("target_date") @db.Date
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([requestDate])
+  @@index([status])
+  @@map("electrical_requests")
+}
+
 
