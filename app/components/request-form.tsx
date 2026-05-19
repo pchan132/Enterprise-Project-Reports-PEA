@@ -28,7 +28,7 @@ interface RequestFormData {
   long: string;
   description: string;
   requestDate: string;
-  requestType: string;
+  requestType: string[];
   meterOption: string;
   caRefNo: string;
   peaNo: string;
@@ -69,7 +69,7 @@ const emptyFormData = (): RequestFormData => ({
   long: "",
   description: "",
   requestDate: getTodayInputValue(),
-  requestType: "",
+  requestType: [],
   meterOption: "",
   caRefNo: "",
   peaNo: "",
@@ -119,6 +119,7 @@ function compactPayload(formData: RequestFormData) {
     caRefNo: formData.caRefNo || null,
     peaNo: formData.peaNo || null,
     targetDate: formData.targetDate || null,
+    requestType: formData.requestType.length > 0 ? formData.requestType : undefined,
   };
 }
 
@@ -205,11 +206,13 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
   }, [isEdit, requestId]);
 
   const availableMeterOptions = useMemo(() => {
-    if (!(formData.requestType in METER_OPTIONS)) {
-      return [];
+    // หากมีประเภทคำร้องที่มี meter options ให้ใช้อันแรก
+    for (const type of formData.requestType) {
+      if (type in METER_OPTIONS) {
+        return METER_OPTIONS[type as keyof typeof METER_OPTIONS];
+      }
     }
-
-    return METER_OPTIONS[formData.requestType as keyof typeof METER_OPTIONS];
+    return [];
   }, [formData.requestType]);
 
   function handleChange(
@@ -229,13 +232,35 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
         next.subDistrict = "";
       }
 
-      if (name === "requestType") {
+      if (name === "meterOption") {
+        // รีเซ็ต meterOption เมื่อเปลี่ยนประเภท
         next.meterOption = "";
       }
 
       return next;
     });
 
+    setMessage("");
+    setError("");
+  }
+
+  function addRequestType(typeValue: string) {
+    if (!typeValue || formData.requestType.includes(typeValue)) {
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      requestType: [...prev.requestType, typeValue],
+    }));
+    setMessage("");
+    setError("");
+  }
+
+  function removeRequestType(typeValue: string) {
+    setFormData((prev) => ({
+      ...prev,
+      requestType: prev.requestType.filter((t) => t !== typeValue),
+    }));
     setMessage("");
     setError("");
   }
@@ -532,21 +557,61 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
             </Field>
 
             <Field label="ประเภทคำร้อง" htmlFor="requestType" required>
-              <select
-                id="requestType"
-                name="requestType"
-                required
-                value={formData.requestType}
-                onChange={handleChange}
-                className={fieldClass}
-              >
-                <option value="">เลือกประเภทคำร้อง</option>
-                {REQUEST_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-3">
+                <select
+                  id="requestType"
+                  onChange={(e) => addRequestType(e.target.value)}
+                  value=""
+                  disabled={formData.requestType.length > 0 && formData.requestType.length >= REQUEST_TYPES.length}
+                  className={fieldClass}
+                >
+                  <option value="">เลือกประเภทคำร้อง</option>
+                  {REQUEST_TYPES.map((type) => (
+                    <option
+                      key={type.value}
+                      value={type.value}
+                      disabled={formData.requestType.includes(type.value)}
+                    >
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+
+                {formData.requestType.length === 0 && (
+                  <div className="rounded-lg bg-rose-50 p-2 text-sm text-rose-600">
+                    กรุณาเลือกประเภทคำร้องอย่างน้อยหนึ่งประเภท
+                  </div>
+                )}
+
+                {formData.requestType.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-slate-700">
+                      ประเภทคำร้องที่เลือก ({formData.requestType.length}):
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.requestType.map((type) => {
+                        const typeLabel = REQUEST_TYPES.find((t) => t.value === type)?.label || type;
+                        return (
+                          <div
+                            key={type}
+                            className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2"
+                          >
+                            <span className="text-sm font-medium text-teal-900">{typeLabel}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeRequestType(type)}
+                              className="text-teal-600 hover:text-teal-900"
+                              title="ลบประเภทนี้"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </Field>
 
             <Field label="ขนาด/ตัวเลือกมิเตอร์" htmlFor="meterOption">

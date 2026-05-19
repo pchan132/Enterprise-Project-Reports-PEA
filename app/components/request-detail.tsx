@@ -66,7 +66,7 @@ function DetailGrid({ items }: { items: DetailItem[] }) {
           className={item.wide ? "sm:col-span-2 lg:col-span-3" : undefined}
         >
           <dt className="text-sm font-medium text-slate-500">{item.label}</dt>
-          <dd className="mt-1 break-words text-base font-semibold text-slate-950">
+          <dd className="mt-1 text-wrap text-base font-semibold text-slate-950">
             {displayValue(item.value)}
           </dd>
         </div>
@@ -205,7 +205,7 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
           <DetailGrid
             items={[
               { label: "วันที่รับคำร้อง", value: formatThaiDate(request.requestDate) },
-              { label: "ประเภทคำร้อง", value: request.requestType },
+              { label: "ประเภทคำร้อง", value: Array.isArray(request.requestType) ? request.requestType.join(", ") : request.requestType },
               { label: "ขนาด/ตัวเลือกมิเตอร์", value: request.meterOption },
               { label: "หมายเลขผู้ใช้ไฟ", value: request.caRefNo },
               { label: "หมายเลขเครื่องวัด", value: request.peaNo },

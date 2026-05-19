@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import RequestSearchForm from "@/app/components/request-search-form";
 import {
@@ -14,6 +14,27 @@ import {
 
 const PAGE_SIZE = 10;
 
+type FilterValues = {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  status: string;
+  address: string;
+  subDistrict: string;
+  district: string;
+  province: string;
+  lat: string;
+  long: string;
+  requestDate: string;
+  requestType: string;
+  meterOption: string;
+  caRefNo: string;
+  peaNo: string;
+  targetDate: string;
+  isFollowUp: string;
+  description: string;
+};
+
 type RequestsListProps = {
   title?: string;
   description?: string;
@@ -24,11 +45,14 @@ type RequestsListProps = {
 
 const statusStyles: Record<RequestStatus, string> = {
   รับเรื่อง: "border-sky-200 bg-sky-50 text-sky-700",
-  ตรวจสอบข้อมูล: "border-amber-200 bg-amber-50 text-amber-700",
-  รอนัดหมาย: "border-violet-200 bg-violet-50 text-violet-700",
-  กำลังดำเนินการ: "border-blue-200 bg-blue-50 text-blue-700",
+  รอตรวจสอบคำร้อง: "border-amber-200 bg-amber-50 text-amber-700",
+  ตรวจไม่ผ่าน: "border-rose-200 bg-rose-50 text-rose-700",
+  รอโทรแจ้ง: "border-orange-200 bg-orange-50 text-orange-700",
+  รอทำชำระเงิน: "border-yellow-200 bg-yellow-50 text-yellow-700",
+  "รอติดตั้งมิเตอร์ / ดำเนินการเพิ่ม / ย้าย": "border-violet-200 bg-violet-50 text-violet-700",
+  "กำลังดำเนินการ หน้างาน": "border-blue-200 bg-blue-50 text-blue-700",
   เสร็จสิ้น: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  ยกเลิก: "border-rose-200 bg-rose-50 text-rose-700",
+  ยกเลิก: "border-slate-200 bg-slate-50 text-slate-700",
 };
 
 function getStatusClass(status: string) {
@@ -74,11 +98,30 @@ export default function RequestsList({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [searchInput, setSearchInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<FilterValues>({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    status: "",
+    address: "",
+    subDistrict: "",
+    district: "",
+    province: "ลพบุรี",
+    lat: "",
+    long: "",
+    requestDate: "",
+    requestType: "",
+    meterOption: "",
+    caRefNo: "",
+    peaNo: "",
+    targetDate: "",
+    isFollowUp: "",
+    description: "",
+  });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const endItem = Math.min(currentPage * PAGE_SIZE, totalItems);
@@ -87,6 +130,30 @@ export default function RequestsList({
     () => Array.from({ length: totalPages }, (_, index) => index + 1),
     [totalPages],
   );
+
+  // Real-time search for firstName and lastName with debounce
+  function handleRealtimeSearch(firstName: string, lastName: string) {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      setFilters((prev) => ({
+        ...prev,
+        firstName,
+        lastName,
+      }));
+      setCurrentPage(1);
+    }, 300);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -101,9 +168,25 @@ export default function RequestsList({
           pageSize: String(PAGE_SIZE),
         });
 
-        if (searchQuery) {
-          searchParams.set("q", searchQuery);
-        }
+        // Add all non-empty filters to search params
+        if (filters.firstName) searchParams.set("firstName", filters.firstName);
+        if (filters.lastName) searchParams.set("lastName", filters.lastName);
+        if (filters.phone) searchParams.set("phone", filters.phone);
+        if (filters.status) searchParams.set("status", filters.status);
+        if (filters.address) searchParams.set("address", filters.address);
+        if (filters.subDistrict) searchParams.set("subDistrict", filters.subDistrict);
+        if (filters.district) searchParams.set("district", filters.district);
+        if (filters.province) searchParams.set("province", filters.province);
+        if (filters.lat) searchParams.set("lat", filters.lat);
+        if (filters.long) searchParams.set("long", filters.long);
+        if (filters.requestDate) searchParams.set("requestDate", filters.requestDate);
+        if (filters.requestType) searchParams.set("requestType", filters.requestType);
+        if (filters.meterOption) searchParams.set("meterOption", filters.meterOption);
+        if (filters.caRefNo) searchParams.set("caRefNo", filters.caRefNo);
+        if (filters.peaNo) searchParams.set("peaNo", filters.peaNo);
+        if (filters.targetDate) searchParams.set("targetDate", filters.targetDate);
+        if (filters.isFollowUp) searchParams.set("isFollowUp", filters.isFollowUp);
+        if (filters.description) searchParams.set("description", filters.description);
 
         if (fixedStatus) {
           searchParams.set("status", fixedStatus);
@@ -143,7 +226,7 @@ export default function RequestsList({
     return () => {
       ignore = true;
     };
-  }, [currentPage, fixedStatus, searchQuery]);
+  }, [currentPage, fixedStatus, filters]);
 
   async function updateStatus(request: ElectricalRequestDto, status: RequestStatus) {
     setMessage("");
@@ -183,15 +266,33 @@ export default function RequestsList({
     setMessage("");
   }
 
-  function submitSearch() {
-    setSearchQuery(searchInput.trim());
+  function handleApplyFilters(newFilters: FilterValues) {
+    setFilters(newFilters);
     setCurrentPage(1);
     setMessage("");
   }
 
-  function clearSearch() {
-    setSearchInput("");
-    setSearchQuery("");
+  function handleClearFilters() {
+    setFilters({
+      firstName: "",
+      lastName: "",
+      phone: "",
+      status: "",
+      address: "",
+      subDistrict: "",
+      district: "",
+      province: "ลพบุรี",
+      lat: "",
+      long: "",
+      requestDate: "",
+      requestType: "",
+      meterOption: "",
+      caRefNo: "",
+      peaNo: "",
+      targetDate: "",
+      isFollowUp: "",
+      description: "",
+    });
     setCurrentPage(1);
     setMessage("");
   }
@@ -234,20 +335,13 @@ export default function RequestsList({
 
           <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
             <RequestSearchForm
-              value={searchInput}
-              onChange={setSearchInput}
-              onSubmit={submitSearch}
-              onClear={clearSearch}
+              onApplyFilters={handleApplyFilters}
+              onRealtimeSearch={handleRealtimeSearch}
+              onClear={handleClearFilters}
             />
-            {searchQuery && (
-              <p className="mt-2 text-sm text-slate-500">
-                ผลการค้นหา <span className="font-medium text-slate-700">{searchQuery}</span>
-                {fixedStatus ? (
-                  <>
-                    {" "}
-                    ในสถานะ <span className="font-medium text-slate-700">{fixedStatus}</span>
-                  </>
-                ) : null}
+            {(Object.values(filters).some((v) => v && v !== "ลพบุรี")) && (
+              <p className="mt-4 text-sm text-slate-500">
+                มีการใช้ตัวกรอง {Object.values(filters).filter((v) => v && v !== "ลพบุรี").length} รายการ
               </p>
             )}
           </div>
@@ -264,12 +358,12 @@ export default function RequestsList({
             </div>
           ) : requests.length === 0 ? (
             <div className="px-4 py-10 text-center text-sm text-slate-500">
-              {searchQuery ? "ไม่พบข้อมูลที่ตรงกับคำค้นหา" : emptyMessage}
+              {Object.values(filters).some((v) => v && v !== "ลพบุรี") ? "ไม่พบข้อมูลที่ตรงกับตัวกรอง" : emptyMessage}
             </div>
           ) : (
             <>
               <div className="hidden overflow-x-auto lg:block">
-                <table className="w-full min-w-[1080px] border-collapse text-left text-sm">
+                <table className="w-full border-collapse text-left text-sm">
                   <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
                       <th className="px-4 py-3 font-semibold">เลขคำร้อง</th>
@@ -304,7 +398,7 @@ export default function RequestsList({
                           <div className="mt-1 text-slate-500">{request.subDistrict}</div>
                         </td>
                         <td className="px-4 py-4">
-                          <div>{request.requestType}</div>
+                          <div>{Array.isArray(request.requestType) ? request.requestType.join(", ") : request.requestType}</div>
                           <div className="mt-1 text-slate-500">{request.meterOption ?? "-"}</div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -388,7 +482,7 @@ export default function RequestsList({
                       </div>
                       <div>
                         <dt className="text-slate-500">ประเภท</dt>
-                        <dd className="font-medium text-slate-900">{request.requestType}</dd>
+                        <dd className="font-medium text-slate-900">{Array.isArray(request.requestType) ? request.requestType.join(", ") : request.requestType}</dd>
                       </div>
                       <div>
                         <dt className="text-slate-500">มิเตอร์</dt>
