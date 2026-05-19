@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import TopNavigation from "./components/top-nav";
 
 export const metadata: Metadata = {
   title: "ระบบรับคำร้องไฟฟ้า",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" className="h-full antialiased">
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <TopNavigation />
+        {children}
+      </body>
     </html>
   );
 }
