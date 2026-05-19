@@ -1,12 +1,21 @@
 "use client";
 
-import { ChangeEvent, FormEvent, ReactNode, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { METER_OPTIONS } from "@/app/lib/data/meter-option";
 import { REQUEST_TYPES } from "@/app/lib/data/request-types";
 import { SUB_DISTRICTS } from "@/app/lib/data/subdistricts";
+import {
+  REQUEST_STATUSES,
+  type ApiErrorResponse,
+  type ElectricalRequestDto,
+  type ElectricalRequestResponse,
+} from "@/app/lib/electrical-request-types";
 
 interface RequestFormData {
+  requestNo: string;
   firstName: string;
   lastName: string;
   phone: string;
@@ -20,13 +29,18 @@ interface RequestFormData {
   description: string;
   requestDate: string;
   requestType: string;
-  metrerOption: string;
-  caRefNo : string; // หมายเลขผู้ใช้ไฟ (ถ้ามี) บัญชีแสดงสัญญา 
-  peaNo : string; // หมายเลข เครื่องวัด (ถ้ามี)
+  meterOption: string;
+  caRefNo: string;
+  peaNo: string;
   status: string;
   isFollowUp: boolean;
   targetDate: string;
 }
+
+type RequestFormProps = {
+  mode?: "create" | "edit";
+  requestId?: string;
+};
 
 type FieldProps = {
   label: string;
@@ -41,8 +55,71 @@ type SectionProps = {
   children: ReactNode;
 };
 
+const emptyFormData = (): RequestFormData => ({
+  requestNo: "",
+  firstName: "",
+  lastName: "",
+  phone: "",
+  phone2: "",
+  address: "",
+  subDistrict: "",
+  district: "",
+  province: "ลพบุรี",
+  lat: "",
+  long: "",
+  description: "",
+  requestDate: getTodayInputValue(),
+  requestType: "",
+  meterOption: "",
+  caRefNo: "",
+  peaNo: "",
+  status: "รับเรื่อง",
+  isFollowUp: false,
+  targetDate: "",
+});
+
 function getTodayInputValue() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function toFormData(request: ElectricalRequestDto): RequestFormData {
+  return {
+    requestNo: request.requestNo ?? "",
+    firstName: request.firstName,
+    lastName: request.lastName,
+    phone: request.phone,
+    phone2: request.phone2 ?? "",
+    address: request.address,
+    subDistrict: request.subDistrict,
+    district: request.district,
+    province: request.province,
+    lat: request.lat === null ? "" : String(request.lat),
+    long: request.long === null ? "" : String(request.long),
+    description: request.description ?? "",
+    requestDate: request.requestDate,
+    requestType: request.requestType,
+    meterOption: request.meterOption ?? "",
+    caRefNo: request.caRefNo ?? "",
+    peaNo: request.peaNo ?? "",
+    status: request.status,
+    isFollowUp: request.isFollowUp,
+    targetDate: request.targetDate ?? "",
+  };
+}
+
+function compactPayload(formData: RequestFormData) {
+  return {
+    ...formData,
+    requestNo: formData.requestNo || undefined,
+    phone2: formData.phone2 || null,
+    lat: formData.lat || null,
+    long: formData.long || null,
+    description: formData.description || null,
+    meterOption: formData.meterOption || null,
+    caRefNo: formData.caRefNo || null,
+    peaNo: formData.peaNo || null,
+    targetDate: formData.targetDate || null,
+  };
 }
 
 function Field({ label, htmlFor, required, children }: FieldProps) {
@@ -60,46 +137,72 @@ function Field({ label, htmlFor, required, children }: FieldProps) {
 function Section({ title, description, children }: SectionProps) {
   return (
     <section className="space-y-4 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-slate-950">{title}</h2>
-          {description && <p className="text-sm text-slate-500">{description}</p>}
-        </div>
+      <div>
+        <h2 className="text-base font-semibold text-slate-950">{title}</h2>
+        {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
       </div>
       {children}
     </section>
   );
 }
 
-export default function RequestForm() {
+export default function RequestForm({ mode = "create", requestId }: RequestFormProps) {
+  const router = useRouter();
+  const isEdit = mode === "edit";
   const [loading, setLoading] = useState(false);
-  const [savedMessage, setSavedMessage] = useState("");
-  const [formData, setFormData] = useState<RequestFormData>({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    phone2: "",
-    address: "",
-    subDistrict: "",
-    district: "",
-    province: "ลพบุรี",
-    lat: "",
-    long: "",
-    description: "",
-    requestDate: getTodayInputValue(),
-    requestType: "",
-    metrerOption: "",
-    caRefNo: "",
-    peaNo: "",
-    status: "รับเรื่อง",
-    isFollowUp: false,
-    targetDate: "",
-  });
+  const [deleting, setDeleting] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState<RequestFormData>(() => emptyFormData());
 
   const fieldClass =
     "h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500";
   const textareaClass =
     "min-h-28 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100";
+
+  useEffect(() => {
+    if (!isEdit || !requestId) {
+      return;
+    }
+
+    const requestKey = requestId;
+    let ignore = false;
+
+    async function loadRequest() {
+      setInitialLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch(`/api/${encodeURIComponent(requestKey)}`, {
+          cache: "no-store",
+        });
+        const payload = (await response.json()) as ElectricalRequestResponse & ApiErrorResponse;
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "โหลดข้อมูลคำร้องไม่สำเร็จ");
+        }
+
+        if (!ignore) {
+          setFormData(toFormData(payload.data));
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err instanceof Error ? err.message : "โหลดข้อมูลคำร้องไม่สำเร็จ");
+        }
+      } finally {
+        if (!ignore) {
+          setInitialLoading(false);
+        }
+      }
+    }
+
+    loadRequest();
+
+    return () => {
+      ignore = true;
+    };
+  }, [isEdit, requestId]);
 
   const availableMeterOptions = useMemo(() => {
     if (!(formData.requestType in METER_OPTIONS)) {
@@ -127,48 +230,136 @@ export default function RequestForm() {
       }
 
       if (name === "requestType") {
-        next.metrerOption = "";
+        next.meterOption = "";
       }
 
       return next;
     });
 
-    setSavedMessage("");
+    setMessage("");
+    setError("");
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setMessage("");
+    setError("");
 
-    window.setTimeout(() => {
+    try {
+      const response = await fetch(isEdit ? `/api/${encodeURIComponent(requestId ?? "")}` : "/api", {
+        method: isEdit ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(compactPayload(formData)),
+      });
+      const payload = (await response.json()) as ElectricalRequestResponse & ApiErrorResponse;
+
+      if (!response.ok) {
+        throw new Error(payload.errors?.join(", ") ?? payload.error ?? "บันทึกข้อมูลไม่สำเร็จ");
+      }
+
+      setMessage(isEdit ? "บันทึกการแก้ไขเรียบร้อยแล้ว" : "เพิ่มคำร้องเรียบร้อยแล้ว");
+      router.refresh();
+      router.push(`/requests/${payload.data.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "บันทึกข้อมูลไม่สำเร็จ");
+    } finally {
       setLoading(false);
-      setSavedMessage("เตรียมข้อมูลคำร้องเรียบร้อยแล้ว");
-      console.log(formData);
-    }, 350);
+    }
+  }
+
+  async function handleDelete() {
+    if (!isEdit || !requestId) {
+      return;
+    }
+
+    const requestLabel = formData.requestNo || `${formData.firstName} ${formData.lastName}`.trim();
+    const confirmed = window.confirm(
+      `ต้องการลบคำร้อง ${requestLabel || "นี้"} ใช่หรือไม่? การลบแล้วไม่สามารถย้อนกลับได้`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await fetch(`/api/${encodeURIComponent(requestId)}`, {
+        method: "DELETE",
+      });
+      const payload = (await response.json()) as ApiErrorResponse;
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "ลบข้อมูลไม่สำเร็จ");
+      }
+
+      router.refresh();
+      router.push("/requests");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "ลบข้อมูลไม่สำเร็จ");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  if (initialLoading) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white px-6 py-10 text-center text-slate-600 shadow-sm">
+        กำลังโหลดข้อมูลคำร้อง...
+      </div>
+    );
   }
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-medium text-teal-700">ระบบรับคำร้อง</p>
             <h1 className="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl">
-              เพิ่มคำร้องใหม่
+              {isEdit ? "แก้ไขคำร้อง" : "เพิ่มคำร้องใหม่"}
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-600">
               กรอกข้อมูลผู้ใช้ไฟและรายละเอียดคำร้อง ช่องที่มีเครื่องหมาย * จำเป็นต้องกรอก
             </p>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-            สถานะ: <span className="font-semibold text-slate-950">{formData.status}</span>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              สถานะ: <span className="font-semibold text-slate-950">{formData.status}</span>
+            </div>
+            <Link href="/requests" className="text-sm font-semibold text-teal-700 hover:text-teal-900">
+              กลับไปรายการคำร้อง
+            </Link>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 px-4 py-5 sm:px-6">
+        {error && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            {error}
+          </div>
+        )}
+
         <Section title="ข้อมูลผู้ใช้ไฟ" description="ข้อมูลติดต่อหลักของผู้ยื่นคำร้อง">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Field label="เลขคำร้อง" htmlFor="requestNo">
+              <input
+                id="requestNo"
+                name="requestNo"
+                type="text"
+                placeholder="ระบบจะสร้างให้อัตโนมัติ"
+                value={formData.requestNo}
+                onChange={handleChange}
+                className={fieldClass}
+              />
+            </Field>
+
             <Field label="ชื่อ" htmlFor="firstName" required>
               <input
                 id="firstName"
@@ -358,12 +549,12 @@ export default function RequestForm() {
               </select>
             </Field>
 
-            <Field label="ขนาด/ตัวเลือกมิเตอร์" htmlFor="metrerOption">
+            <Field label="ขนาด/ตัวเลือกมิเตอร์" htmlFor="meterOption">
               <select
-                id="metrerOption"
-                name="metrerOption"
+                id="meterOption"
+                name="meterOption"
                 disabled={availableMeterOptions.length === 0}
-                value={formData.metrerOption}
+                value={formData.meterOption}
                 onChange={handleChange}
                 className={fieldClass}
               >
@@ -415,6 +606,22 @@ export default function RequestForm() {
               />
             </Field>
 
+            <Field label="สถานะ" htmlFor="status">
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className={fieldClass}
+              >
+                {REQUEST_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
             <label className="flex h-12 items-center gap-3 self-end rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm font-medium text-slate-700">
               <input
                 name="isFollowUp"
@@ -443,15 +650,27 @@ export default function RequestForm() {
         <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="min-h-5 text-sm font-medium text-teal-700" aria-live="polite">
-              {savedMessage}
+              {message}
             </p>
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-12 w-full rounded-lg bg-teal-700 px-5 font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-wait disabled:opacity-60 sm:w-auto"
-            >
-              {loading ? "กำลังบันทึก..." : "บันทึกคำร้อง"}
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {isEdit && (
+                <button
+                  type="button"
+                  disabled={loading || deleting}
+                  onClick={handleDelete}
+                  className="h-12 w-full rounded-lg border border-rose-300 bg-white px-5 font-semibold text-rose-700 transition hover:border-rose-500 hover:bg-rose-50 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+                >
+                  {deleting ? "กำลังลบ..." : "ลบคำร้อง"}
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={loading || deleting}
+                className="h-12 w-full rounded-lg bg-teal-700 px-5 font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+              >
+                {loading ? "กำลังบันทึก..." : isEdit ? "บันทึกการแก้ไข" : "บันทึกคำร้อง"}
+              </button>
+            </div>
           </div>
         </div>
       </form>
