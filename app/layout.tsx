@@ -3,7 +3,7 @@ import "./globals.css";
 import TopNav from "@/app/components/top-navigation";
 
 export const metadata: Metadata = {
-  title: "ระบบรับคำร้องไฟฟ้า",
+  title: "ระบบรับคำร้องไฟฟ้า1",
   description: "แบบฟอร์มรับคำร้องงานไฟฟ้า",
 };
 
