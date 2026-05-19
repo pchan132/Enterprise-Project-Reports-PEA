@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import RequestSearchForm from "@/app/components/request-search-form";
 import {
   REQUEST_STATUSES,
   type ApiErrorResponse,
@@ -12,6 +13,14 @@ import {
 } from "@/app/lib/electrical-request-types";
 
 const PAGE_SIZE = 10;
+
+type RequestsListProps = {
+  title?: string;
+  description?: string;
+  fixedStatus?: string;
+  showAddButton?: boolean;
+  emptyMessage?: string;
+};
 
 const statusStyles: Record<RequestStatus, string> = {
   รับเรื่อง: "border-sky-200 bg-sky-50 text-sky-700",
@@ -54,11 +63,19 @@ function getStatusOptions(currentStatus: string) {
     : [currentStatus, ...REQUEST_STATUSES];
 }
 
-export default function RequestsList() {
+export default function RequestsList({
+  title = "คำร้องทั้งหมด",
+  description = "แสดงข้อมูลจาก backend โดยกดที่ชื่อหรือเลขคำร้องเพื่อดูรายละเอียดทั้งหมด",
+  fixedStatus,
+  showAddButton = true,
+  emptyMessage = "ยังไม่มีข้อมูลคำร้อง",
+}: RequestsListProps) {
   const [requests, setRequests] = useState<ElectricalRequestDto[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -83,6 +100,15 @@ export default function RequestsList() {
           page: String(currentPage),
           pageSize: String(PAGE_SIZE),
         });
+
+        if (searchQuery) {
+          searchParams.set("q", searchQuery);
+        }
+
+        if (fixedStatus) {
+          searchParams.set("status", fixedStatus);
+        }
+
         const response = await fetch(`/api?${searchParams.toString()}`, {
           cache: "no-store",
         });
@@ -117,7 +143,7 @@ export default function RequestsList() {
     return () => {
       ignore = true;
     };
-  }, [currentPage]);
+  }, [currentPage, fixedStatus, searchQuery]);
 
   async function updateStatus(request: ElectricalRequestDto, status: RequestStatus) {
     setMessage("");
@@ -139,8 +165,13 @@ export default function RequestsList() {
       }
 
       setRequests((prevRequests) =>
-        prevRequests.map((item) => (item.id === request.id ? payload.data! : item)),
+        prevRequests
+          .map((item) => (item.id === request.id ? payload.data! : item))
+          .filter((item) => !fixedStatus || item.status === fixedStatus),
       );
+      if (fixedStatus && status !== fixedStatus) {
+        setTotalItems((current) => Math.max(0, current - 1));
+      }
       setMessage(`เปลี่ยนสถานะ ${displayRequestNo(request)} เป็น "${status}" แล้ว`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "เปลี่ยนสถานะไม่สำเร็จ");
@@ -152,6 +183,19 @@ export default function RequestsList() {
     setMessage("");
   }
 
+  function submitSearch() {
+    setSearchQuery(searchInput.trim());
+    setCurrentPage(1);
+    setMessage("");
+  }
+
+  function clearSearch() {
+    setSearchInput("");
+    setSearchQuery("");
+    setCurrentPage(1);
+    setMessage("");
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-4 text-slate-950 sm:px-6 sm:py-8 lg:px-8">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-5">
@@ -159,18 +203,20 @@ export default function RequestsList() {
           <div>
             <p className="text-sm font-medium text-teal-700">ระบบรับคำร้อง</p>
             <h1 className="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl">
-              คำร้องทั้งหมด
+              {title}
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              แสดงข้อมูลจาก backend โดยกดที่ชื่อหรือเลขคำร้องเพื่อดูรายละเอียดทั้งหมด
+              {description}
             </p>
           </div>
-          <Link
-            href="/requests/new"
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100"
-          >
-            เพิ่มคำร้องใหม่
-          </Link>
+          {showAddButton && (
+            <Link
+              href="/requests/new"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100"
+            >
+              เพิ่มคำร้องใหม่
+            </Link>
+          )}
         </header>
 
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -186,6 +232,26 @@ export default function RequestsList() {
             </p>
           </div>
 
+          <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
+            <RequestSearchForm
+              value={searchInput}
+              onChange={setSearchInput}
+              onSubmit={submitSearch}
+              onClear={clearSearch}
+            />
+            {searchQuery && (
+              <p className="mt-2 text-sm text-slate-500">
+                ผลการค้นหา <span className="font-medium text-slate-700">{searchQuery}</span>
+                {fixedStatus ? (
+                  <>
+                    {" "}
+                    ในสถานะ <span className="font-medium text-slate-700">{fixedStatus}</span>
+                  </>
+                ) : null}
+              </p>
+            )}
+          </div>
+
           {error && (
             <div className="border-b border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 sm:px-6">
               {error}
@@ -198,7 +264,7 @@ export default function RequestsList() {
             </div>
           ) : requests.length === 0 ? (
             <div className="px-4 py-10 text-center text-sm text-slate-500">
-              ยังไม่มีข้อมูลคำร้อง
+              {searchQuery ? "ไม่พบข้อมูลที่ตรงกับคำค้นหา" : emptyMessage}
             </div>
           ) : (
             <>

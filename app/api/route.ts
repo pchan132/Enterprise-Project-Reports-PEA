@@ -5,6 +5,11 @@ import {
   parsePagination,
   serializeElectricalRequest,
 } from "@/app/lib/electrical-requests-api";
+import {
+  buildElectricalRequestBaseWhere,
+  parseSearchKeyword,
+  searchElectricalRequests,
+} from "@/app/lib/electrical-request-search";
 import { prisma } from "@/app/lib/prisma";
 import type { NextRequest } from "next/server";
 
@@ -13,9 +18,29 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const { page, pageSize, skip } = parsePagination(searchParams);
-  const where = buildWhere(searchParams);
+  const where = buildElectricalRequestBaseWhere(searchParams);
+  const keyword = parseSearchKeyword(searchParams);
 
   try {
+    if (keyword) {
+      const candidates = await prisma.electricalRequest.findMany({
+        where,
+        orderBy: [{ requestDate: "desc" }, { createdAt: "desc" }],
+      });
+      const matchedRequests = searchElectricalRequests(candidates, keyword);
+      const requests = matchedRequests.slice(skip, skip + pageSize);
+
+      return Response.json({
+        data: requests.map(serializeElectricalRequest),
+        meta: {
+          page,
+          pageSize,
+          total: matchedRequests.length,
+          totalPages: Math.max(1, Math.ceil(matchedRequests.length / pageSize)),
+        },
+      });
+    }
+
     const [requests, total] = await prisma.$transaction([
       prisma.electricalRequest.findMany({
         where,
@@ -84,39 +109,6 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-}
-
-function buildWhere(searchParams: URLSearchParams) {
-  const where: Prisma.ElectricalRequestWhereInput = {};
-  const status = searchParams.get("status")?.trim();
-  const district = searchParams.get("district")?.trim();
-  const requestType = searchParams.get("requestType")?.trim();
-  const keyword = searchParams.get("q")?.trim();
-
-  if (status) {
-    where.status = status;
-  }
-
-  if (district) {
-    where.district = district;
-  }
-
-  if (requestType) {
-    where.requestType = requestType;
-  }
-
-  if (keyword) {
-    where.OR = [
-      { requestNo: { contains: keyword } },
-      { firstName: { contains: keyword } },
-      { lastName: { contains: keyword } },
-      { phone: { contains: keyword } },
-      { caRefNo: { contains: keyword } },
-      { peaNo: { contains: keyword } },
-    ];
-  }
-
-  return where;
 }
 
 async function readJsonBody(request: Request) {
