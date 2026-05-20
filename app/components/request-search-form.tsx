@@ -73,20 +73,32 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
     description: "",
   });
 
-  const subDistricts = filters.district ? SUB_DISTRICTS[filters.district as keyof typeof SUB_DISTRICTS] || [] : [];
+  const subDistricts = filters.district
+    ? SUB_DISTRICTS[filters.district as keyof typeof SUB_DISTRICTS] || []
+    : [];
 
   function handleFilterChange(field: keyof FilterValues, value: string) {
-    if (field === "district" && value) {
-      setFilters((prev) => ({ ...prev, [field]: value, subDistrict: "" }));
-      const newFilters = { ...filters, [field]: value, subDistrict: "" };
-      onRealtimeSearch(newFilters.firstName, newFilters.lastName, newFilters.district, newFilters.subDistrict);
+    if (field === "district") {
+      // เมื่อเปลี่ยนอำเภอ ให้ล้างตำบลด้วย
+      const newFilters = { ...filters, district: value, subDistrict: "" };
+      setFilters(newFilters);
+      onRealtimeSearch(newFilters.firstName, newFilters.lastName, value, "");
+    } else if (field === "subDistrict") {
+      // ตำบลมาจาก select ดังนั้นค่าถูกต้องเสมอ — ส่ง real-time ได้ทันที
+      setFilters((prev) => ({ ...prev, subDistrict: value }));
+      onRealtimeSearch(filters.firstName, filters.lastName, filters.district, value);
     } else {
       setFilters((prev) => ({ ...prev, [field]: value }));
-      
-      // Trigger real-time search for name and location fields
-      if (field === "firstName" || field === "lastName" || field === "subDistrict") {
+
+      // ค้นหา real-time สำหรับชื่อและนามสกุล
+      if (field === "firstName" || field === "lastName") {
         const newFilters = { ...filters, [field]: value };
-        onRealtimeSearch(newFilters.firstName, newFilters.lastName, newFilters.district && newFilters.district, newFilters.subDistrict);
+        onRealtimeSearch(
+          newFilters.firstName,
+          newFilters.lastName,
+          newFilters.district,
+          newFilters.subDistrict,
+        );
       }
     }
   }
@@ -156,6 +168,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
 
       {/* ค้นหา ตำบล และ อำเภอ */}
       <div className="grid gap-4 sm:grid-cols-2">
+        {/* อำเภอ: ใช้ select เลือกได้ทันที */}
         <div>
           <label htmlFor="district" className="block text-sm font-semibold text-slate-700">
             อำเภอ
@@ -174,6 +187,8 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
             ))}
           </select>
         </div>
+
+        {/* ตำบล: dropdown ตามอำเภอที่เลือก */}
         <div>
           <label htmlFor="subDistrict" className="block text-sm font-semibold text-slate-700">
             ตำบล
@@ -183,7 +198,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
             value={filters.subDistrict}
             onChange={(e) => handleFilterChange("subDistrict", e.target.value)}
             disabled={!filters.district}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100 disabled:bg-slate-100 disabled:text-slate-400"
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
           >
             <option value="">-- ทั้งหมด --</option>
             {subDistricts.map((sub) => (

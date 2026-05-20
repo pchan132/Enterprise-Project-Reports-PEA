@@ -131,8 +131,13 @@ export default function RequestsList({
     [totalPages],
   );
 
-  // Real-time search for firstName and lastName with debounce
-  function handleRealtimeSearch(firstName: string, lastName: string) {
+  // Real-time search สำหรับ ชื่อ, นามสกุล, อำเภอ, ตำบล พร้อม debounce 300ms
+  function handleRealtimeSearch(
+    firstName: string,
+    lastName: string,
+    district: string,
+    subDistrict: string,
+  ) {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
@@ -142,6 +147,8 @@ export default function RequestsList({
         ...prev,
         firstName,
         lastName,
+        district,
+        subDistrict,
       }));
       setCurrentPage(1);
     }, 300);
