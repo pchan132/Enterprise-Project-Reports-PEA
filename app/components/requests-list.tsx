@@ -47,6 +47,8 @@ type RequestsListProps = {
   description?: string;
   /** กรองเฉพาะสถานะเหล่านี้ (ถ้าไม่ระบุ = แสดงทุกสถานะ) */
   fixedStatuses?: string[];
+  /** กรองเฉพาะประเภทคำร้องเหล่านี้ (ถ้าไม่ระบุ = แสดงทุกประเภท) */
+  fixedRequestTypes?: string[];
   showAddButton?: boolean;
   emptyMessage?: string;
   /**
@@ -106,6 +108,7 @@ export default function RequestsList({
   title = "คำร้องทั้งหมด",
   description = "แสดงข้อมูลจาก backend โดยกดที่ชื่อหรือเลขคำร้องเพื่อดูรายละเอียดทั้งหมด",
   fixedStatuses,
+  fixedRequestTypes,
   showAddButton = true,
   emptyMessage = "ยังไม่มีข้อมูลคำร้อง",
   statusTransitions,
@@ -230,6 +233,13 @@ export default function RequestsList({
           }
         }
 
+        if (fixedRequestTypes && fixedRequestTypes.length > 0) {
+          // ส่งหลาย requestType (backend รองรับ ?requestType=A&requestType=B)
+          for (const rt of fixedRequestTypes) {
+            searchParams.append("requestType", rt);
+          }
+        }
+
         const response = await fetch(`/api?${searchParams.toString()}`, {
           cache: "no-store",
         });
@@ -264,7 +274,7 @@ export default function RequestsList({
     return () => {
       ignore = true;
     };
-  }, [currentPage, fixedStatuses, filters]);
+  }, [currentPage, fixedStatuses, fixedRequestTypes, filters]);
 
   async function updateStatus(request: ElectricalRequestDto, status: RequestStatus) {
     setMessage("");
