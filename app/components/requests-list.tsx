@@ -26,7 +26,7 @@ type FilterValues = {
   lat: string;
   long: string;
   requestDate: string;
-  requestType: string;
+  requestType: string[];
   meterOption: string;
   caRefNo: string;
   peaNo: string;
@@ -45,6 +45,7 @@ type RequestsListProps = {
 
 const statusStyles: Record<RequestStatus, string> = {
   รับเรื่อง: "border-sky-200 bg-sky-50 text-sky-700",
+  หาเอกสารเพิ่มเติม: "border-cyan-200 bg-cyan-50 text-cyan-700",
   รอตรวจสอบคำร้อง: "border-amber-200 bg-amber-50 text-amber-700",
   ตรวจไม่ผ่าน: "border-rose-200 bg-rose-50 text-rose-700",
   รอโทรแจ้ง: "border-orange-200 bg-orange-50 text-orange-700",
@@ -110,7 +111,7 @@ export default function RequestsList({
     lat: "",
     long: "",
     requestDate: "",
-    requestType: "",
+    requestType: [],
     meterOption: "",
     caRefNo: "",
     peaNo: "",
@@ -187,7 +188,10 @@ export default function RequestsList({
         if (filters.lat) searchParams.set("lat", filters.lat);
         if (filters.long) searchParams.set("long", filters.long);
         if (filters.requestDate) searchParams.set("requestDate", filters.requestDate);
-        if (filters.requestType) searchParams.set("requestType", filters.requestType);
+        // ส่ง requestType หลายค่า (ถ้าเลือกไว้)
+        for (const rt of filters.requestType) {
+          searchParams.append("requestType", rt);
+        }
         if (filters.meterOption) searchParams.set("meterOption", filters.meterOption);
         if (filters.caRefNo) searchParams.set("caRefNo", filters.caRefNo);
         if (filters.peaNo) searchParams.set("peaNo", filters.peaNo);
@@ -292,7 +296,7 @@ export default function RequestsList({
       lat: "",
       long: "",
       requestDate: "",
-      requestType: "",
+      requestType: [],
       meterOption: "",
       caRefNo: "",
       peaNo: "",
@@ -346,9 +350,14 @@ export default function RequestsList({
               onRealtimeSearch={handleRealtimeSearch}
               onClear={handleClearFilters}
             />
-            {(Object.values(filters).some((v) => v && v !== "ลพบุรี")) && (
+            {(filters.requestType.length > 0 || Object.entries(filters).some(([key, v]) => key !== "requestType" && v && v !== "ลพบุรี")) && (
               <p className="mt-4 text-sm text-slate-500">
-                มีการใช้ตัวกรอง {Object.values(filters).filter((v) => v && v !== "ลพบุรี").length} รายการ
+                มีการใช้ตัวกรอง{" "}
+                {filters.requestType.length +
+                  Object.entries(filters).filter(
+                    ([key, v]) => key !== "requestType" && v && v !== "ลพบุรี",
+                  ).length}{" "}
+                รายการ
               </p>
             )}
           </div>
@@ -365,7 +374,9 @@ export default function RequestsList({
             </div>
           ) : requests.length === 0 ? (
             <div className="px-4 py-10 text-center text-sm text-slate-500">
-              {Object.values(filters).some((v) => v && v !== "ลพบุรี") ? "ไม่พบข้อมูลที่ตรงกับตัวกรอง" : emptyMessage}
+              {(filters.requestType.length > 0 || Object.entries(filters).some(([key, v]) => key !== "requestType" && v && v !== "ลพบุรี"))
+                ? "ไม่พบข้อมูลที่ตรงกับตัวกรอง"
+                : emptyMessage}
             </div>
           ) : (
             <>

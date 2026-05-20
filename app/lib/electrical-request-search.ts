@@ -33,7 +33,7 @@ export function buildElectricalRequestBaseWhere(searchParams: URLSearchParams) {
   const district = searchParams.get("district")?.trim();
   const subDistrict = searchParams.get("subDistrict")?.trim();
   const province = searchParams.get("province")?.trim();
-  const requestType = searchParams.get("requestType")?.trim();
+  const requestTypes = searchParams.getAll("requestType").map((v) => v.trim()).filter(Boolean);
   const meterOption = searchParams.get("meterOption")?.trim();
   const requestDate = searchParams.get("requestDate")?.trim();
   const targetDate = searchParams.get("targetDate")?.trim();
@@ -68,9 +68,9 @@ export function buildElectricalRequestBaseWhere(searchParams: URLSearchParams) {
     where.province = province;
   }
 
-  if (requestType) {
+  if (requestTypes.length > 0) {
     where.requestType = {
-      hasSome: [requestType],
+      hasSome: requestTypes,
     };
   }
 
