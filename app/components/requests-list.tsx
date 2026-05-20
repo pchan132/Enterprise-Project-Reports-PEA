@@ -35,12 +35,26 @@ type FilterValues = {
   description: string;
 };
 
+type StatusTransition = {
+  /** สถานะปัจจุบันของแถว */
+  from: string;
+  /** สถานะที่เลือกได้ใน dropdown ของแถวนั้น */
+  choices: string[];
+};
+
 type RequestsListProps = {
   title?: string;
   description?: string;
-  fixedStatus?: string;
+  /** กรองเฉพาะสถานะเหล่านี้ (ถ้าไม่ระบุ = แสดงทุกสถานะ) */
+  fixedStatuses?: string[];
   showAddButton?: boolean;
   emptyMessage?: string;
+  /**
+   * กฎการเปลี่ยนสถานะ — ส่งเป็น plain data เพื่อรองรับ Server Component
+   * แต่ละรายการระบุว่าเมื่อสถานะปัจจุบันเป็น `from` ให้แสดงตัวเลือก `choices`
+   * ถ้าไม่ระบุ = แสดงสถานะทั้งหมดตามค่าเริ่มต้น
+   */
+  statusTransitions?: StatusTransition[];
 };
 
 const statusStyles: Record<RequestStatus, string> = {
@@ -91,10 +105,20 @@ function getStatusOptions(currentStatus: string) {
 export default function RequestsList({
   title = "คำร้องทั้งหมด",
   description = "แสดงข้อมูลจาก backend โดยกดที่ชื่อหรือเลขคำร้องเพื่อดูรายละเอียดทั้งหมด",
-  fixedStatus,
+  fixedStatuses,
   showAddButton = true,
   emptyMessage = "ยังไม่มีข้อมูลคำร้อง",
+  statusTransitions,
 }: RequestsListProps) {
+  // สร้าง Map { สถานะปัจจุบัน → ตัวเลือกที่แสดง } จาก statusTransitions prop
+  const transitionMap = new Map(
+    statusTransitions?.map(({ from, choices }) => [from, choices]),
+  );
+
+  // ฟังก์ชันที่ใช้จริงใน dropdown — ใช้ transitionMap ถ้ามี, ไม่งั้นใช้ default
+  function resolveStatusChoices(currentStatus: string): string[] {
+    return transitionMap.get(currentStatus) ?? getStatusOptions(currentStatus);
+  }
   const [requests, setRequests] = useState<ElectricalRequestDto[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -199,8 +223,11 @@ export default function RequestsList({
         if (filters.isFollowUp) searchParams.set("isFollowUp", filters.isFollowUp);
         if (filters.description) searchParams.set("description", filters.description);
 
-        if (fixedStatus) {
-          searchParams.set("status", fixedStatus);
+        if (fixedStatuses && fixedStatuses.length > 0) {
+          // ส่งหลาย status (backend รองรับ ?status=A&status=B)
+          for (const s of fixedStatuses) {
+            searchParams.append("status", s);
+          }
         }
 
         const response = await fetch(`/api?${searchParams.toString()}`, {
@@ -237,7 +264,7 @@ export default function RequestsList({
     return () => {
       ignore = true;
     };
-  }, [currentPage, fixedStatus, filters]);
+  }, [currentPage, fixedStatuses, filters]);
 
   async function updateStatus(request: ElectricalRequestDto, status: RequestStatus) {
     setMessage("");
@@ -261,9 +288,18 @@ export default function RequestsList({
       setRequests((prevRequests) =>
         prevRequests
           .map((item) => (item.id === request.id ? payload.data! : item))
-          .filter((item) => !fixedStatus || item.status === fixedStatus),
+          .filter(
+            (item) =>
+              !fixedStatuses ||
+              fixedStatuses.length === 0 ||
+              fixedStatuses.includes(item.status),
+          ),
       );
-      if (fixedStatus && status !== fixedStatus) {
+      if (
+        fixedStatuses &&
+        fixedStatuses.length > 0 &&
+        !fixedStatuses.includes(status)
+      ) {
         setTotalItems((current) => Math.max(0, current - 1));
       }
       setMessage(`เปลี่ยนสถานะ ${displayRequestNo(request)} เป็น "${status}" แล้ว`);
@@ -448,7 +484,7 @@ export default function RequestsList({
                               className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-teal-600 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
                               aria-label={`เปลี่ยนสถานะ ${displayRequestNo(request)}`}
                             >
-                              {getStatusOptions(request.status).map((status) => (
+                              {resolveStatusChoices(request.status).map((status) => (
                                 <option key={status} value={status}>
                                   {status}
                                 </option>
@@ -490,7 +526,7 @@ export default function RequestsList({
                     <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                       <div>
                         <dt className="text-slate-500">เบอร์โทร</dt>
-                        <dd className="font-medium text-slate-900">{request.phone}</dd>
+                        <dd className="font-medium text-slate-900"><a href={`tel:${request.phone}`}>{request.phone}</a></dd>
                       </div>
                       <div>
                         <dt className="text-slate-500">พื้นที่</dt>
@@ -537,7 +573,7 @@ export default function RequestsList({
                         className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-teal-600 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
                         aria-label={`เปลี่ยนสถานะ ${displayRequestNo(request)}`}
                       >
-                        {getStatusOptions(request.status).map((status) => (
+                        {resolveStatusChoices(request.status).map((status) => (
                           <option key={status} value={status}>
                             {status}
                           </option>
@@ -569,11 +605,10 @@ export default function RequestsList({
                   type="button"
                   onClick={() => goToPage(page)}
                   aria-current={currentPage === page ? "page" : undefined}
-                  className={`h-10 min-w-10 rounded-lg border px-3 text-sm font-semibold transition focus:outline-none focus:ring-4 focus:ring-teal-100 ${
-                    currentPage === page
-                      ? "border-teal-700 bg-teal-700 text-white"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-teal-600 hover:text-teal-700"
-                  }`}
+                  className={`h-10 min-w-10 rounded-lg border px-3 text-sm font-semibold transition focus:outline-none focus:ring-4 focus:ring-teal-100 ${currentPage === page
+                    ? "border-teal-700 bg-teal-700 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:border-teal-600 hover:text-teal-700"
+                    }`}
                 >
                   {page}
                 </button>
