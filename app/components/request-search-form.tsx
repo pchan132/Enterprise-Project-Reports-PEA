@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { SUB_DISTRICTS } from "@/app/lib/data/subdistricts";
 import { METER_OPTIONS } from "@/app/lib/data/meter-option";
+import { REQUEST_TYPES } from "@/app/lib/data/request-types";
 import { REQUEST_STATUSES } from "@/app/lib/electrical-request-types";
 
 type FilterValues = {
@@ -17,7 +18,7 @@ type FilterValues = {
   lat: string;
   long: string;
   requestDate: string;
-  requestType: string;
+  requestType: string[];
   meterOption: string;
   caRefNo: string;
   peaNo: string;
@@ -41,14 +42,7 @@ const METER_OPTIONS_LIST = Array.from(
   )
 ).sort();
 
-const REQUEST_TYPES = [
-  "ขอใช้ไฟใหม่ถาวร",
-  "ขอใช้ไฟชั่วคราว",
-  "ขอไฟเกษตร",
-  "เปลี่ยนเป็น TOU",
-  "เพิ่มขนาด",
-  "ติดตั้งไฟ",
-] as const;
+
 
 export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, onClear }: RequestSearchFormProps) {
   const [showFilters, setShowFilters] = useState(false);
@@ -64,7 +58,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
     lat: "",
     long: "",
     requestDate: "",
-    requestType: "",
+    requestType: [],
     meterOption: "",
     caRefNo: "",
     peaNo: "",
@@ -103,6 +97,17 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
     }
   }
 
+  /** สลับเปิด/ปิดประเภทคำร้องในตัวกรอง (checkbox toggle) */
+  function toggleRequestType(typeValue: string) {
+    setFilters((prev) => {
+      const alreadySelected = prev.requestType.includes(typeValue);
+      const updatedTypes = alreadySelected
+        ? prev.requestType.filter((t) => t !== typeValue)
+        : [...prev.requestType, typeValue];
+      return { ...prev, requestType: updatedTypes };
+    });
+  }
+
   function handleApplyFilters(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     onApplyFilters(filters);
@@ -121,7 +126,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
       lat: "",
       long: "",
       requestDate: "",
-      requestType: "",
+      requestType: [],
       meterOption: "",
       caRefNo: "",
       peaNo: "",
@@ -132,7 +137,11 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
     onClear();
   }
 
-  const hasActiveFilters = Object.values(filters).some((v) => v && v !== "ลพบุรี");
+  const hasActiveFilters =
+    filters.requestType.length > 0 ||
+    Object.entries(filters).some(
+      ([key, v]) => key !== "requestType" && v && v !== "ลพบุรี",
+    );
 
   return (
     <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
@@ -228,8 +237,8 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
 
       {showFilters && (
         <form onSubmit={handleApplyFilters} className="space-y-4 border-t border-slate-200 pt-4">
-          {/* Row 1: เบอร์โทร, สถานะ, ประเภทคำร้อง */}
-          <div className="grid gap-4 sm:grid-cols-3">
+          {/* Row 1: เบอร์โทร, สถานะ */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="phone" className="block text-sm font-semibold text-slate-700">
                 เบอร์โทร
@@ -261,23 +270,51 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 ))}
               </select>
             </div>
-            <div>
-              <label htmlFor="requestType" className="block text-sm font-semibold text-slate-700">
-                ประเภทคำร้อง
-              </label>
-              <select
-                id="requestType"
-                value={filters.requestType}
-                onChange={(e) => handleFilterChange("requestType", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
-              >
-                <option value="">-- ทั้งหมด --</option>
-                {REQUEST_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
+          </div>
+
+          {/* ประเภทคำร้อง (Checkbox เลือกได้หลายรายการ) */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-700">ประเภทคำร้อง</span>
+              {filters.requestType.length > 0 && (
+                <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-800">
+                  เลือกแล้ว {filters.requestType.length} รายการ
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {REQUEST_TYPES.map((type) => {
+                const isSelected = filters.requestType.includes(type.value);
+
+                return (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => toggleRequestType(type.value)}
+                    className={[
+                      "flex items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm font-medium transition",
+                      isSelected
+                        ? "border-teal-500 bg-teal-50 text-teal-900 ring-2 ring-teal-200"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
+                    ].join(" ")}
+                  >
+                    {/* Checkbox indicator */}
+                    <span
+                      className={[
+                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 text-[10px] transition",
+                        isSelected
+                          ? "border-teal-600 bg-teal-600 text-white"
+                          : "border-slate-300 bg-white",
+                      ].join(" ")}
+                    >
+                      {isSelected && "✓"}
+                    </span>
+
+                    <span className="flex-1">{type.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
