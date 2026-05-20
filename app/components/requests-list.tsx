@@ -526,7 +526,9 @@ export default function RequestsList({
                     <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                       <div>
                         <dt className="text-slate-500">เบอร์โทร</dt>
-                        <dd className="font-medium text-slate-900"><a href={`tel:${request.phone}`}>{request.phone}</a></dd>
+                        <dd className="font-medium text-blue-600">
+                          <a href={`tel:${request.phone}`}>{request.phone}</a>
+                        </dd>
                       </div>
                       <div>
                         <dt className="text-slate-500">พื้นที่</dt>
