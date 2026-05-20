@@ -116,7 +116,7 @@ export default function RequestsList({
   );
 
   // ฟังก์ชันที่ใช้จริงใน dropdown — ใช้ transitionMap ถ้ามี, ไม่งั้นใช้ default
-  function resolveStatusChoices(currentStatus: string): string[] {
+  function resolveStatusChoices(currentStatus: string) {
     return transitionMap.get(currentStatus) ?? getStatusOptions(currentStatus);
   }
   const [requests, setRequests] = useState<ElectricalRequestDto[]>([]);
