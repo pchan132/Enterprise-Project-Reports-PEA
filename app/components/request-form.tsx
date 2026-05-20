@@ -14,6 +14,10 @@ import {
   type ElectricalRequestResponse,
 } from "@/app/lib/electrical-request-types";
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
 interface RequestFormData {
   requestNo: string;
   firstName: string;
@@ -55,6 +59,14 @@ type SectionProps = {
   children: ReactNode;
 };
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getTodayInputValue(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 const emptyFormData = (): RequestFormData => ({
   requestNo: "",
   firstName: "",
@@ -77,10 +89,6 @@ const emptyFormData = (): RequestFormData => ({
   isFollowUp: false,
   targetDate: "",
 });
-
-function getTodayInputValue() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function toFormData(request: ElectricalRequestDto): RequestFormData {
   return {
@@ -123,6 +131,40 @@ function compactPayload(formData: RequestFormData) {
   };
 }
 
+/**
+ * รวบรวม meter options จากทุกประเภทคำร้องที่เลือก (ไม่ซ้ำกัน)
+ * เช่น เลือก "ขอใช้ไฟใหม่ถาวร" + "ขอไฟเกษตร" → รวม options ทั้งสองเข้าด้วยกัน
+ */
+function collectMeterOptions(selectedTypes: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const typeName of selectedTypes) {
+    const options = METER_OPTIONS[typeName as keyof typeof METER_OPTIONS];
+    if (!options) continue;
+
+    for (const option of options) {
+      if (!seen.has(option)) {
+        seen.add(option);
+        result.push(option);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * ตรวจว่าประเภทคำร้องนี้ต้องเลือก meter option หรือไม่
+ */
+function doesTypeNeedMeter(typeValue: string): boolean {
+  return typeValue in METER_OPTIONS;
+}
+
+// ---------------------------------------------------------------------------
+// Reusable sub-components
+// ---------------------------------------------------------------------------
+
 function Field({ label, htmlFor, required, children }: FieldProps) {
   return (
     <label htmlFor={htmlFor} className="flex min-w-0 flex-col gap-2">
@@ -147,9 +189,15 @@ function Section({ title, description, children }: SectionProps) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export default function RequestForm({ mode = "create", requestId }: RequestFormProps) {
   const router = useRouter();
   const isEdit = mode === "edit";
+
+  // --- State ----------------------------------------------------------------
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEdit);
@@ -157,17 +205,16 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<RequestFormData>(() => emptyFormData());
 
+  // --- Shared CSS -----------------------------------------------------------
   const fieldClass =
     "h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500";
   const textareaClass =
     "min-h-28 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100";
 
+  // --- Load existing data (edit mode) ---------------------------------------
   useEffect(() => {
-    if (!isEdit || !requestId) {
-      return;
-    }
+    if (!isEdit || !requestId) return;
 
-    const requestKey = requestId;
     let ignore = false;
 
     async function loadRequest() {
@@ -175,7 +222,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
       setError("");
 
       try {
-        const response = await fetch(`/api/${encodeURIComponent(requestKey)}`, {
+        const response = await fetch(`/api/${encodeURIComponent(requestId!)}`, {
           cache: "no-store",
         });
         const payload = (await response.json()) as ElectricalRequestResponse & ApiErrorResponse;
@@ -199,84 +246,82 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
     }
 
     loadRequest();
-
-    return () => {
-      ignore = true;
-    };
+    return () => { ignore = true; };
   }, [isEdit, requestId]);
 
-  const availableMeterOptions = useMemo(() => {
-    // หากมีประเภทคำร้องที่มี meter options ให้ใช้อันแรก
-    for (const type of formData.requestType) {
-      if (type in METER_OPTIONS) {
-        return METER_OPTIONS[type as keyof typeof METER_OPTIONS];
-      }
-    }
-    return [];
-  }, [formData.requestType]);
+  // --- Meter options (รวมจากทุกประเภทที่เลือก) -------------------------------
+  const availableMeterOptions = useMemo(
+    () => collectMeterOptions(formData.requestType),
+    [formData.requestType],
+  );
 
-  function handleChange(
+  // เมื่อ meter options เปลี่ยน → clear ค่าที่เลือกไว้ ถ้ามันไม่อยู่ในรายการใหม่
+  useEffect(() => {
+    if (formData.meterOption && !availableMeterOptions.includes(formData.meterOption)) {
+      setFormData((prev) => ({ ...prev, meterOption: "" }));
+    }
+  }, [availableMeterOptions, formData.meterOption]);
+
+  // ตรวจว่ามีประเภทที่ต้องเลือก meter option อย่างน้อย 1 ตัวหรือไม่
+  const needsMeterOption = formData.requestType.some(doesTypeNeedMeter);
+
+  // --- Event handlers -------------------------------------------------------
+
+  /** จัดการ input ทั่วไป (text / select / textarea / checkbox) */
+  function handleFieldChange(
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) {
     const { name, value, type } = e.target;
-    const newValue =
-      type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    const newValue = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
 
     setFormData((prev) => {
-      const next = {
-        ...prev,
-        [name]: newValue,
-      };
+      const next = { ...prev, [name]: newValue };
 
+      // เมื่อเปลี่ยนอำเภอ → reset ตำบล
       if (name === "district") {
         next.subDistrict = "";
-      }
-
-      if (name === "meterOption") {
-        // รีเซ็ต meterOption เมื่อเปลี่ยนประเภท
-        next.meterOption = "";
       }
 
       return next;
     });
 
+    clearMessages();
+  }
+
+  /** สลับเปิด/ปิดประเภทคำร้อง (checkbox toggle) */
+  function toggleRequestType(typeValue: string) {
+    setFormData((prev) => {
+      const alreadySelected = prev.requestType.includes(typeValue);
+
+      const updatedTypes = alreadySelected
+        ? prev.requestType.filter((t) => t !== typeValue) // ลบออก
+        : [...prev.requestType, typeValue];               // เพิ่มเข้า
+
+      return { ...prev, requestType: updatedTypes };
+    });
+
+    clearMessages();
+  }
+
+  function clearMessages() {
     setMessage("");
     setError("");
   }
 
-  function addRequestType(typeValue: string) {
-    if (!typeValue || formData.requestType.includes(typeValue)) {
-      return;
-    }
-    setFormData((prev) => ({
-      ...prev,
-      requestType: [...prev.requestType, typeValue],
-    }));
-    setMessage("");
-    setError("");
-  }
-
-  function removeRequestType(typeValue: string) {
-    setFormData((prev) => ({
-      ...prev,
-      requestType: prev.requestType.filter((t) => t !== typeValue),
-    }));
-    setMessage("");
-    setError("");
-  }
+  // --- Submit & Delete ------------------------------------------------------
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
-    setError("");
+    clearMessages();
 
     try {
-      const response = await fetch(isEdit ? `/api/${encodeURIComponent(requestId ?? "")}` : "/api", {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const url = isEdit ? `/api/${encodeURIComponent(requestId ?? "")}` : "/api";
+      const method = isEdit ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(compactPayload(formData)),
       });
       const payload = (await response.json()) as ElectricalRequestResponse & ApiErrorResponse;
@@ -296,27 +341,19 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
   }
 
   async function handleDelete() {
-    if (!isEdit || !requestId) {
-      return;
-    }
+    if (!isEdit || !requestId) return;
 
     const requestLabel = formData.requestNo || `${formData.firstName} ${formData.lastName}`.trim();
     const confirmed = window.confirm(
       `ต้องการลบคำร้อง ${requestLabel || "นี้"} ใช่หรือไม่? การลบแล้วไม่สามารถย้อนกลับได้`,
     );
-
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setDeleting(true);
-    setMessage("");
-    setError("");
+    clearMessages();
 
     try {
-      const response = await fetch(`/api/${encodeURIComponent(requestId)}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(`/api/${encodeURIComponent(requestId)}`, { method: "DELETE" });
       const payload = (await response.json()) as ApiErrorResponse;
 
       if (!response.ok) {
@@ -332,6 +369,8 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
     }
   }
 
+  // --- Loading state --------------------------------------------------------
+
   if (initialLoading) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white px-6 py-10 text-center text-slate-600 shadow-sm">
@@ -340,8 +379,11 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
     );
   }
 
+  // --- Render ---------------------------------------------------------------
+
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      {/* ── Header ── */}
       <div className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -364,13 +406,16 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
         </div>
       </div>
 
+      {/* ── Form ── */}
       <form onSubmit={handleSubmit} className="space-y-6 px-4 py-5 sm:px-6">
+        {/* Error banner */}
         {error && (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
             {error}
           </div>
         )}
 
+        {/* ── Section 1: ข้อมูลผู้ใช้ไฟ ── */}
         <Section title="ข้อมูลผู้ใช้ไฟ" description="ข้อมูลติดต่อหลักของผู้ยื่นคำร้อง">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="เลขคำร้อง" htmlFor="requestNo">
@@ -380,7 +425,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 type="text"
                 placeholder="ระบบจะสร้างให้อัตโนมัติ"
                 value={formData.requestNo}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -394,7 +439,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 placeholder="เช่น สมชาย"
                 required
                 value={formData.firstName}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -408,7 +453,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 placeholder="เช่น ใจดี"
                 required
                 value={formData.lastName}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -423,7 +468,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 placeholder="08x-xxx-xxxx"
                 required
                 value={formData.phone}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -437,13 +482,14 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 autoComplete="tel"
                 placeholder="ถ้ามี"
                 value={formData.phone2}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
           </div>
         </Section>
 
+        {/* ── Section 2: สถานที่ขอใช้ไฟ ── */}
         <Section title="สถานที่ขอใช้ไฟ" description="เลือกอำเภอก่อน แล้วระบบจะแสดงตำบลให้เลือก">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="ที่อยู่" htmlFor="address" required>
@@ -455,7 +501,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 placeholder="บ้านเลขที่ หมู่ ถนน"
                 required
                 value={formData.address}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -466,7 +512,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 name="district"
                 required
                 value={formData.district}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               >
                 <option value="">เลือกอำเภอ</option>
@@ -485,7 +531,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 required
                 disabled={!formData.district}
                 value={formData.subDistrict}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               >
                 <option value="">
@@ -507,7 +553,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 type="text"
                 required
                 value={formData.province}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -521,7 +567,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 step="any"
                 placeholder="เช่น 14.7990"
                 value={formData.lat}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -535,14 +581,15 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 step="any"
                 placeholder="เช่น 100.6530"
                 value={formData.long}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
           </div>
         </Section>
 
-        <Section title="รายละเอียดคำร้อง" description="เลือกประเภทคำร้องและวันนัดหมายที่เกี่ยวข้อง">
+        {/* ── Section 3: รายละเอียดคำร้อง ── */}
+        <Section title="รายละเอียดคำร้อง" description="เลือกประเภทคำร้อง — เลือกได้หลายรายการ ถ้าประเภทที่เลือกต้องระบุขนาดมิเตอร์ ระบบจะแสดงช่องให้เลือกอัตโนมัติ">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="วันที่รับคำร้อง" htmlFor="requestDate" required>
               <input
@@ -551,91 +598,102 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 type="date"
                 required
                 value={formData.requestDate}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
+          </div>
 
-            <Field label="ประเภทคำร้อง" htmlFor="requestType" required>
-              <div className="space-y-3">
+          {/* ── ประเภทคำร้อง (Checkbox list) ── */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-700">
+                ประเภทคำร้อง <span className="text-rose-600">*</span>
+              </span>
+              {formData.requestType.length > 0 && (
+                <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-800">
+                  เลือกแล้ว {formData.requestType.length} รายการ
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {REQUEST_TYPES.map((type) => {
+                const isSelected = formData.requestType.includes(type.value);
+                const hasMeter = doesTypeNeedMeter(type.value);
+
+                return (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => toggleRequestType(type.value)}
+                    className={[
+                      "flex items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition",
+                      isSelected
+                        ? "border-teal-500 bg-teal-50 text-teal-900 ring-2 ring-teal-200"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
+                    ].join(" ")}
+                  >
+                    {/* Checkbox indicator */}
+                    <span
+                      className={[
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 text-xs transition",
+                        isSelected
+                          ? "border-teal-600 bg-teal-600 text-white"
+                          : "border-slate-300 bg-white",
+                      ].join(" ")}
+                    >
+                      {isSelected && "✓"}
+                    </span>
+
+                    <span className="flex-1">{type.label}</span>
+
+                    {/* ป้ายบอกว่าต้องเลือกขนาดมิเตอร์ */}
+                    {hasMeter && (
+                      <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                        เลือกมิเตอร์
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {formData.requestType.length === 0 && (
+              <p className="rounded-lg bg-rose-50 p-2.5 text-sm text-rose-600">
+                กรุณาเลือกประเภทคำร้องอย่างน้อยหนึ่งรายการ
+              </p>
+            )}
+          </div>
+
+          {/* ── ขนาด/ตัวเลือกมิเตอร์ (แสดงเฉพาะเมื่อมีประเภทที่ต้องเลือก) ── */}
+          {needsMeterOption && (
+            <div className="rounded-lg border border-teal-100 bg-teal-50/50 p-4">
+              <Field label="ขนาด/ตัวเลือกมิเตอร์" htmlFor="meterOption" required>
                 <select
-                  id="requestType"
-                  onChange={(e) => addRequestType(e.target.value)}
-                  value=""
-                  disabled={formData.requestType.length > 0 && formData.requestType.length >= REQUEST_TYPES.length}
+                  id="meterOption"
+                  name="meterOption"
+                  value={formData.meterOption}
+                  onChange={handleFieldChange}
                   className={fieldClass}
                 >
-                  <option value="">เลือกประเภทคำร้อง</option>
-                  {REQUEST_TYPES.map((type) => (
-                    <option
-                      key={type.value}
-                      value={type.value}
-                      disabled={formData.requestType.includes(type.value)}
-                    >
-                      {type.label}
+                  <option value="">— เลือกขนาดมิเตอร์ —</option>
+                  {availableMeterOptions.map((meter) => (
+                    <option key={meter} value={meter}>
+                      {meter}
                     </option>
                   ))}
                 </select>
+              </Field>
 
-                {formData.requestType.length === 0 && (
-                  <div className="rounded-lg bg-rose-50 p-2 text-sm text-rose-600">
-                    กรุณาเลือกประเภทคำร้องอย่างน้อยหนึ่งประเภท
-                  </div>
-                )}
+              <p className="mt-2 text-xs text-teal-700">
+                💡 ตัวเลือกด้านบนรวมมาจากประเภทคำร้องที่เลือกไว้ทั้งหมด
+              </p>
+            </div>
+          )}
 
-                {formData.requestType.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-slate-700">
-                      ประเภทคำร้องที่เลือก ({formData.requestType.length}):
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {formData.requestType.map((type) => {
-                        const typeLabel = REQUEST_TYPES.find((t) => t.value === type)?.label || type;
-                        return (
-                          <div
-                            key={type}
-                            className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2"
-                          >
-                            <span className="text-sm font-medium text-teal-900">{typeLabel}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeRequestType(type)}
-                              className="text-teal-600 hover:text-teal-900"
-                              title="ลบประเภทนี้"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Field>
-
-            <Field label="ขนาด/ตัวเลือกมิเตอร์" htmlFor="meterOption">
-              <select
-                id="meterOption"
-                name="meterOption"
-                disabled={availableMeterOptions.length === 0}
-                value={formData.meterOption}
-                onChange={handleChange}
-                className={fieldClass}
-              >
-                <option value="">
-                  {availableMeterOptions.length > 0
-                    ? "เลือกตัวเลือกเกี่ยวกับมิเตอร์"
-                    : "ไม่ต้องเลือกสำหรับประเภทนี้"}
-                </option>
-                {availableMeterOptions.map((meter) => (
-                  <option key={meter} value={meter}>
-                    {meter}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
+          {/* ── ช่องข้อมูลเพิ่มเติม ── */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="หมายเลขผู้ใช้ไฟ (CA Ref No.)" htmlFor="caRefNo">
               <input
                 id="caRefNo"
@@ -643,7 +701,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 type="text"
                 placeholder="ถ้ามี"
                 value={formData.caRefNo}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -655,7 +713,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 type="text"
                 placeholder="ถ้ามี"
                 value={formData.peaNo}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -666,7 +724,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 name="targetDate"
                 type="date"
                 value={formData.targetDate}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               />
             </Field>
@@ -676,7 +734,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 id="status"
                 name="status"
                 value={formData.status}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className={fieldClass}
               >
                 {REQUEST_STATUSES.map((status) => (
@@ -692,7 +750,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                 name="isFollowUp"
                 type="checkbox"
                 checked={formData.isFollowUp}
-                onChange={handleChange}
+                onChange={handleFieldChange}
                 className="h-5 w-5 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
               />
               ติดตาม/ทวงคำร้องแล้ว
@@ -706,12 +764,13 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
               rows={4}
               placeholder="ระบุจุดสังเกต รายละเอียดงาน หรือข้อมูลที่ต้องแจ้งทีมช่าง"
               value={formData.description}
-              onChange={handleChange}
+              onChange={handleFieldChange}
               className={textareaClass}
             />
           </Field>
         </Section>
 
+        {/* ── Sticky footer ── */}
         <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="min-h-5 text-sm font-medium text-teal-700" aria-live="polite">
@@ -742,3 +801,4 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
     </div>
   );
 }
+
