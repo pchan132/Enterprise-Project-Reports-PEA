@@ -1,4 +1,4 @@
-import type { ElectricalRequest, Prisma } from "@/app/generated/prisma/client";
+import { Prisma, type ElectricalRequest } from "@/app/generated/prisma/client";
 
 const SEARCHABLE_STRING_FIELDS = [
   "id",
@@ -27,9 +27,30 @@ export function parseSearchKeyword(searchParams: URLSearchParams) {
 
 export function buildElectricalRequestBaseWhere(searchParams: URLSearchParams) {
   const where: Prisma.ElectricalRequestWhereInput = {};
+
+  // Single value filters
   const status = searchParams.get("status")?.trim();
   const district = searchParams.get("district")?.trim();
+  const subDistrict = searchParams.get("subDistrict")?.trim();
+  const province = searchParams.get("province")?.trim();
   const requestType = searchParams.get("requestType")?.trim();
+  const meterOption = searchParams.get("meterOption")?.trim();
+  const requestDate = searchParams.get("requestDate")?.trim();
+  const targetDate = searchParams.get("targetDate")?.trim();
+  const isFollowUp = searchParams.get("isFollowUp")?.trim();
+
+  // Multiple value filters (for contains-like search)
+  const firstName = searchParams.get("firstName")?.trim();
+  const lastName = searchParams.get("lastName")?.trim();
+  const phone = searchParams.get("phone")?.trim();
+  const address = searchParams.get("address")?.trim();
+  const description = searchParams.get("description")?.trim();
+  const caRefNo = searchParams.get("caRefNo")?.trim();
+  const peaNo = searchParams.get("peaNo")?.trim();
+
+  // Location filters
+  const lat = searchParams.get("lat")?.trim();
+  const long = searchParams.get("long")?.trim();
 
   if (status) {
     where.status = status;
@@ -39,8 +60,106 @@ export function buildElectricalRequestBaseWhere(searchParams: URLSearchParams) {
     where.district = district;
   }
 
+  if (subDistrict) {
+    where.subDistrict = subDistrict;
+  }
+
+  if (province) {
+    where.province = province;
+  }
+
   if (requestType) {
-    where.requestType = requestType;
+    where.requestType = {
+      hasSome: [requestType],
+    };
+  }
+
+  if (meterOption) {
+    where.meterOption = meterOption;
+  }
+
+  if (requestDate) {
+    where.requestDate = {
+      equals: new Date(`${requestDate}T00:00:00Z`),
+    };
+  }
+
+  if (targetDate) {
+    where.targetDate = {
+      equals: new Date(`${targetDate}T00:00:00Z`),
+    };
+  }
+
+  if (isFollowUp !== null && isFollowUp !== undefined && isFollowUp !== "") {
+    where.isFollowUp = isFollowUp === "true";
+  }
+
+  if (firstName) {
+    where.firstName = {
+      contains: firstName,
+      mode: "insensitive",
+    };
+  }
+
+  if (lastName) {
+    where.lastName = {
+      contains: lastName,
+      mode: "insensitive",
+    };
+  }
+
+  if (phone) {
+    where.phone = {
+      contains: phone,
+    };
+  }
+
+  if (address) {
+    where.address = {
+      contains: address,
+      mode: "insensitive",
+    };
+  }
+
+  if (description) {
+    where.description = {
+      contains: description,
+      mode: "insensitive",
+    };
+  }
+
+  if (caRefNo) {
+    where.caRefNo = {
+      contains: caRefNo,
+      mode: "insensitive",
+    };
+  }
+
+  if (peaNo) {
+    where.peaNo = {
+      contains: peaNo,
+      mode: "insensitive",
+    };
+  }
+
+  if (lat) {
+    const latNum = parseFloat(lat);
+    if (!isNaN(latNum)) {
+      where.lat = {
+        gte: new Prisma.Decimal(latNum - 0.001),
+        lte: new Prisma.Decimal(latNum + 0.001),
+      };
+    }
+  }
+
+  if (long) {
+    const longNum = parseFloat(long);
+    if (!isNaN(longNum)) {
+      where.long = {
+        gte: new Prisma.Decimal(longNum - 0.001),
+        lte: new Prisma.Decimal(longNum + 0.001),
+      };
+    }
   }
 
   return where;
@@ -149,9 +268,13 @@ function compactSearchText(value: string) {
 }
 
 function getSearchValues(request: ElectricalRequest) {
-  const values = SEARCHABLE_STRING_FIELDS.map((field) =>
-    valueToString(request[field as SearchableStringField]),
-  );
+  const values = SEARCHABLE_STRING_FIELDS.map((field) => {
+    if (field === "requestType" && Array.isArray(request.requestType)) {
+      // join array values with space for searching
+      return request.requestType.join(" ");
+    }
+    return valueToString(request[field as SearchableStringField]);
+  });
 
   values.push(
     dateToSearchValue(request.requestDate),

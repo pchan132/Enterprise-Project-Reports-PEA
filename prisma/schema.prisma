@@ -27,7 +27,7 @@ model ElectricalRequest {
   long         Decimal? @db.Decimal(10, 7)
   description  String?  @db.Text
   requestDate  DateTime @map("request_date") @db.Date
-  requestType  String   @map("request_type")
+  requestType  String[] @map("request_type")
   meterOption  String?  @map("meter_option")
   caRefNo      String?  @map("ca_ref_no")
   peaNo        String?  @map("pea_no")

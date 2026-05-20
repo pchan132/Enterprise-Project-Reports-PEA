@@ -14,7 +14,7 @@ type ParseResult<T> =
 
 type MutableElectricalRequestData = Record<
   string,
-  string | number | boolean | Date | null | undefined
+  string | string[] | number | boolean | Date | null | undefined
 >;
 
 const REQUIRED_CREATE_FIELDS = [
@@ -71,8 +71,30 @@ export function parseCreateElectricalRequest(
   const data: MutableElectricalRequestData = {};
   const normalizedBody = normalizeBody(body);
 
+  // Parse requestType as array
+  if ("requestType" in normalizedBody) {
+    const requestTypeValue = normalizedBody.requestType;
+    let requestTypeArray: string[] = [];
+
+    if (Array.isArray(requestTypeValue)) {
+      requestTypeArray = requestTypeValue.filter(
+        (item) => typeof item === "string" && item.length > 0,
+      );
+    } else if (typeof requestTypeValue === "string" && requestTypeValue.length > 0) {
+      requestTypeArray = [requestTypeValue];
+    }
+
+    if (requestTypeArray.length === 0) {
+      errors.push("requestType is required and must not be empty");
+    } else {
+      data.requestType = requestTypeArray;
+    }
+  } else {
+    errors.push("requestType is required");
+  }
+
   for (const field of STRING_FIELDS) {
-    if (field in normalizedBody) {
+    if (field !== "requestType" && field in normalizedBody) {
       const value = parseOptionalString(normalizedBody[field]);
 
       if (isRequiredStringField(field) && value === null) {
@@ -85,7 +107,7 @@ export function parseCreateElectricalRequest(
   }
 
   for (const field of REQUIRED_CREATE_FIELDS) {
-    if (!(field in normalizedBody)) {
+    if (field !== "requestType" && !(field in normalizedBody)) {
       errors.push(`${field} is required`);
     }
   }
@@ -120,8 +142,28 @@ export function parseUpdateElectricalRequest(
   const data: MutableElectricalRequestData = {};
   const normalizedBody = normalizeBody(body);
 
+  // Parse requestType as array if provided
+  if ("requestType" in normalizedBody) {
+    const requestTypeValue = normalizedBody.requestType;
+    let requestTypeArray: string[] = [];
+
+    if (Array.isArray(requestTypeValue)) {
+      requestTypeArray = requestTypeValue.filter(
+        (item) => typeof item === "string" && item.length > 0,
+      );
+    } else if (typeof requestTypeValue === "string" && requestTypeValue.length > 0) {
+      requestTypeArray = [requestTypeValue];
+    }
+
+    if (requestTypeArray.length === 0) {
+      errors.push("requestType cannot be empty");
+    } else {
+      data.requestType = requestTypeArray;
+    }
+  }
+
   for (const field of STRING_FIELDS) {
-    if (field in normalizedBody) {
+    if (field !== "requestType" && field in normalizedBody) {
       const value = parseOptionalString(normalizedBody[field]);
 
       if (isRequiredStringField(field) && value === null) {

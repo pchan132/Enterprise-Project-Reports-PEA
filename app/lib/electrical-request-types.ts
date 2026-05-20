@@ -1,8 +1,11 @@
 export const REQUEST_STATUSES = [
   "รับเรื่อง",
-  "ตรวจสอบข้อมูล",
-  "รอนัดหมาย",
-  "กำลังดำเนินการ",
+  "รอตรวจสอบคำร้อง",
+  "ตรวจไม่ผ่าน",
+  "รอโทรแจ้ง",
+  "รอทำชำระเงิน",
+  "รอติดตั้งมิเตอร์ / ดำเนินการเพิ่ม / ย้าย",
+  "กำลังดำเนินการ หน้างาน",
   "เสร็จสิ้น",
   "ยกเลิก",
 ] as const;
@@ -24,7 +27,7 @@ export type ElectricalRequestDto = {
   long: number | null;
   description: string | null;
   requestDate: string;
-  requestType: string;
+  requestType: string[];
   meterOption: string | null;
   caRefNo: string | null;
   peaNo: string | null;
