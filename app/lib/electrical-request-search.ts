@@ -29,7 +29,7 @@ export function buildElectricalRequestBaseWhere(searchParams: URLSearchParams) {
   const where: Prisma.ElectricalRequestWhereInput = {};
 
   // Single value filters
-  const status = searchParams.get("status")?.trim();
+  const statuses = searchParams.getAll("status").map((v) => v.trim()).filter(Boolean);
   const district = searchParams.get("district")?.trim();
   const subDistrict = searchParams.get("subDistrict")?.trim();
   const province = searchParams.get("province")?.trim();
@@ -52,8 +52,10 @@ export function buildElectricalRequestBaseWhere(searchParams: URLSearchParams) {
   const lat = searchParams.get("lat")?.trim();
   const long = searchParams.get("long")?.trim();
 
-  if (status) {
-    where.status = status;
+  if (statuses.length === 1) {
+    where.status = statuses[0];
+  } else if (statuses.length > 1) {
+    where.status = { in: statuses };
   }
 
   if (district) {
