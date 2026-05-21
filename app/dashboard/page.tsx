@@ -7,10 +7,16 @@ import { useEffect, useState } from "react";
 // Types
 // ---------------------------------------------------------------------------
 
+type StatusCount = {
+  status: string;
+  count: number;
+};
+
 type RequestTypeSummary = {
   type: string;
   label: string;
   count: number;
+  statusCounts: StatusCount[];
 };
 
 type DashboardData = {
@@ -110,6 +116,29 @@ const DEFAULT_STYLE = {
 
 function getTypeStyle(type: string) {
   return TYPE_STYLES[type] ?? DEFAULT_STYLE;
+}
+
+// ---------------------------------------------------------------------------
+// สีสำหรับแต่ละ Status
+// ---------------------------------------------------------------------------
+
+const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
+  "รับเรื่อง":                              { bg: "bg-blue-50",    text: "text-blue-700",    dot: "bg-blue-500" },
+  "หาเอกสารเพิ่มเติม":                      { bg: "bg-yellow-50",  text: "text-yellow-700",  dot: "bg-yellow-500" },
+  "รอตรวจสอบคำร้อง":                        { bg: "bg-indigo-50",  text: "text-indigo-700",  dot: "bg-indigo-500" },
+  "ตรวจไม่ผ่าน":                            { bg: "bg-red-50",     text: "text-red-700",     dot: "bg-red-500" },
+  "รอโทรแจ้ง":                              { bg: "bg-orange-50",  text: "text-orange-700",  dot: "bg-orange-500" },
+  "รอทำชำระเงิน":                           { bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-500" },
+  "รอติดตั้งมิเตอร์ / ดำเนินการเพิ่ม / ย้าย": { bg: "bg-purple-50",  text: "text-purple-700",  dot: "bg-purple-500" },
+  "กำลังดำเนินการ หน้างาน":                   { bg: "bg-cyan-50",    text: "text-cyan-700",    dot: "bg-cyan-500" },
+  "เสร็จสิ้น":                              { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
+  "ยกเลิก":                                { bg: "bg-slate-100",  text: "text-slate-600",   dot: "bg-slate-400" },
+};
+
+const DEFAULT_STATUS_COLOR = { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-400" };
+
+function getStatusColor(status: string) {
+  return STATUS_COLORS[status] ?? DEFAULT_STATUS_COLOR;
 }
 
 // ---------------------------------------------------------------------------
@@ -247,6 +276,29 @@ export default function DashboardPage() {
                       {item.count.toLocaleString("th-TH")}
                     </p>
 
+                    {/* ─── Status Breakdown ─── */}
+                    {item.statusCounts.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-1.5 border-t border-slate-100 pt-3">
+                        {item.statusCounts.map((sc) => {
+                          const color = getStatusColor(sc.status);
+                          return (
+                            <div
+                              key={sc.status}
+                              className={`flex items-center justify-between rounded-md px-2 py-1 ${color.bg}`}
+                            >
+                              <span className={`flex items-center gap-1.5 text-xs font-medium ${color.text}`}>
+                                <span className={`inline-block h-1.5 w-1.5 rounded-full ${color.dot}`} />
+                                {sc.status}
+                              </span>
+                              <span className={`text-xs font-bold ${color.text}`}>
+                                {sc.count.toLocaleString("th-TH")}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     {/* แถบสี gradient ด้านล่าง */}
                     <div
                       className={`absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r ${style.gradient} opacity-0 transition-opacity duration-200 group-hover:opacity-100`}
@@ -285,3 +337,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
