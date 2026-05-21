@@ -144,11 +144,11 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
     );
 
   return (
-    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
+    <div className="space-y-6 rounded-3xl border border-white/60 bg-white/50 p-6 shadow-sm backdrop-blur-md">
       {/* ค้นหาชื่อ-นามสกุล (Real Time) */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-semibold text-slate-700">
+          <label htmlFor="firstName" className="block text-base font-bold text-slate-800">
             ชื่อ
           </label>
           <input
@@ -157,11 +157,11 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
             value={filters.firstName}
             onChange={(e) => handleFilterChange("firstName", e.target.value)}
             placeholder="กรอกชื่อ"
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+            className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
           />
         </div>
         <div>
-          <label htmlFor="lastName" className="block text-sm font-semibold text-slate-700">
+          <label htmlFor="lastName" className="block text-base font-bold text-slate-800">
             นามสกุล
           </label>
           <input
@@ -170,7 +170,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
             value={filters.lastName}
             onChange={(e) => handleFilterChange("lastName", e.target.value)}
             placeholder="กรอกนามสกุล"
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+            className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
           />
         </div>
       </div>
@@ -179,14 +179,14 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
       <div className="grid gap-4 sm:grid-cols-2">
         {/* อำเภอ: ใช้ select เลือกได้ทันที */}
         <div>
-          <label htmlFor="district" className="block text-sm font-semibold text-slate-700">
+          <label htmlFor="district" className="block text-base font-bold text-slate-800">
             อำเภอ
           </label>
           <select
             id="district"
             value={filters.district}
             onChange={(e) => handleFilterChange("district", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+            className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
           >
             <option value="">-- ทั้งหมด --</option>
             {DISTRICTS.map((district) => (
@@ -199,7 +199,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
 
         {/* ตำบล: dropdown ตามอำเภอที่เลือก */}
         <div>
-          <label htmlFor="subDistrict" className="block text-sm font-semibold text-slate-700">
+          <label htmlFor="subDistrict" className="block text-base font-bold text-slate-800">
             ตำบล
           </label>
           <select
@@ -207,7 +207,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
             value={filters.subDistrict}
             onChange={(e) => handleFilterChange("subDistrict", e.target.value)}
             disabled={!filters.district}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+            className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
           >
             <option value="">-- ทั้งหมด --</option>
             {subDistricts.map((sub) => (
@@ -240,7 +240,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
           {/* Row 1: เบอร์โทร, สถานะ */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="phone" className="block text-base font-bold text-slate-800">
                 เบอร์โทร
               </label>
               <input
@@ -249,18 +249,18 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 value={filters.phone}
                 onChange={(e) => handleFilterChange("phone", e.target.value)}
                 placeholder="เบอร์โทร"
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
             <div>
-              <label htmlFor="status" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="status" className="block text-base font-bold text-slate-800">
                 สถานะ
               </label>
               <select
                 id="status"
                 value={filters.status}
                 onChange={(e) => handleFilterChange("status", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               >
                 <option value="">-- ทั้งหมด --</option>
                 {REQUEST_STATUSES.map((status) => (
@@ -273,17 +273,17 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
           </div>
 
           {/* ประเภทคำร้อง (Checkbox เลือกได้หลายรายการ) */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-700">ประเภทคำร้อง</span>
+              <span className="text-base font-bold text-slate-800">ประเภทคำร้อง</span>
               {filters.requestType.length > 0 && (
-                <span className="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-800">
+                <span className="rounded-full bg-teal-100 px-3 py-1 text-sm font-bold text-teal-800">
                   เลือกแล้ว {filters.requestType.length} รายการ
                 </span>
               )}
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {REQUEST_TYPES.map((type) => {
                 const isSelected = filters.requestType.includes(type.value);
 
@@ -293,7 +293,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                     type="button"
                     onClick={() => toggleRequestType(type.value)}
                     className={[
-                      "flex items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm font-medium transition",
+                      "flex min-h-[3rem] items-center gap-3 rounded-xl border px-4 py-3 text-left text-base font-medium transition shadow-sm",
                       isSelected
                         ? "border-teal-500 bg-teal-50 text-teal-900 ring-2 ring-teal-200"
                         : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
@@ -302,7 +302,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                     {/* Checkbox indicator */}
                     <span
                       className={[
-                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 text-[10px] transition",
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 text-xs font-bold transition",
                         isSelected
                           ? "border-teal-600 bg-teal-600 text-white"
                           : "border-slate-300 bg-white",
@@ -311,7 +311,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                       {isSelected && "✓"}
                     </span>
 
-                    <span className="flex-1">{type.label}</span>
+                    <span className="flex-1 leading-snug">{type.label}</span>
                   </button>
                 );
               })}
@@ -321,7 +321,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
           {/* Row 2: ที่อยู่ */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label htmlFor="address" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="address" className="block text-base font-bold text-slate-800">
                 ที่อยู่
               </label>
               <input
@@ -330,7 +330,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 value={filters.address}
                 onChange={(e) => handleFilterChange("address", e.target.value)}
                 placeholder="ที่อยู่"
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
           </div>
@@ -338,7 +338,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
           {/* Row 3: จังหวัด, ละติจูด, ลองจิจูด */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label htmlFor="province" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="province" className="block text-base font-bold text-slate-800">
                 จังหวัด
               </label>
               <input
@@ -347,11 +347,11 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 value={filters.province}
                 onChange={(e) => handleFilterChange("province", e.target.value)}
                 placeholder="จังหวัด"
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
             <div>
-              <label htmlFor="lat" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="lat" className="block text-base font-bold text-slate-800">
                 ละติจูด
               </label>
               <input
@@ -361,11 +361,11 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 value={filters.lat}
                 onChange={(e) => handleFilterChange("lat", e.target.value)}
                 placeholder="ละติจูด"
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
             <div>
-              <label htmlFor="long" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="long" className="block text-base font-bold text-slate-800">
                 ลองจิจูด
               </label>
               <input
@@ -375,7 +375,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 value={filters.long}
                 onChange={(e) => handleFilterChange("long", e.target.value)}
                 placeholder="ลองจิจูด"
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
           </div>
@@ -383,7 +383,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
           {/* Row 4: วันที่รับคำร้อง, วันที่จัดคิว, ติดตาม */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label htmlFor="requestDate" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="requestDate" className="block text-base font-bold text-slate-800">
                 วันที่รับคำร้อง
               </label>
               <input
@@ -391,11 +391,11 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 type="date"
                 value={filters.requestDate}
                 onChange={(e) => handleFilterChange("requestDate", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
             <div>
-              <label htmlFor="targetDate" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="targetDate" className="block text-base font-bold text-slate-800">
                 วันที่จัดคิว
               </label>
               <input
@@ -403,18 +403,18 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 type="date"
                 value={filters.targetDate}
                 onChange={(e) => handleFilterChange("targetDate", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
             <div>
-              <label htmlFor="isFollowUp" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="isFollowUp" className="block text-base font-bold text-slate-800">
                 ติดตาม/ทวงคำร้อง
               </label>
               <select
                 id="isFollowUp"
                 value={filters.isFollowUp}
                 onChange={(e) => handleFilterChange("isFollowUp", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               >
                 <option value="">-- ทั้งหมด --</option>
                 <option value="true">ติดตามแล้ว</option>
@@ -426,14 +426,14 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
           {/* Row 5: ขนาด/ตัวเลือกมิเตอร์, หมายเลขผู้ใช้ไฟ, หมายเลขเครื่องวัด */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label htmlFor="meterOption" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="meterOption" className="block text-base font-bold text-slate-800">
                 ขนาด/ตัวเลือกมิเตอร์
               </label>
               <select
                 id="meterOption"
                 value={filters.meterOption}
                 onChange={(e) => handleFilterChange("meterOption", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               >
                 <option value="">-- ทั้งหมด --</option>
                 {METER_OPTIONS_LIST.map((option) => (
@@ -444,7 +444,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
               </select>
             </div>
             <div>
-              <label htmlFor="caRefNo" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="caRefNo" className="block text-base font-bold text-slate-800">
                 หมายเลขผู้ใช้ไฟ (CA Ref)
               </label>
               <input
@@ -453,11 +453,11 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 value={filters.caRefNo}
                 onChange={(e) => handleFilterChange("caRefNo", e.target.value)}
                 placeholder="CA Ref No"
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
             <div>
-              <label htmlFor="peaNo" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="peaNo" className="block text-base font-bold text-slate-800">
                 หมายเลขเครื่องวัด (PEA No)
               </label>
               <input
@@ -466,14 +466,14 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 value={filters.peaNo}
                 onChange={(e) => handleFilterChange("peaNo", e.target.value)}
                 placeholder="PEA No"
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
             </div>
           </div>
 
           {/* Row 6: รายละเอียดเพิ่มเติม */}
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-slate-700">
+            <label htmlFor="description" className="block text-base font-bold text-slate-800">
               รายละเอียดเพิ่มเติม
             </label>
             <textarea
@@ -482,25 +482,25 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
               onChange={(e) => handleFilterChange("description", e.target.value)}
               placeholder="ค้นหาในรายละเอียดเพิ่มเติม"
               rows={3}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+              className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
             />
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-2 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-6">
             <button
               type="submit"
-              className="flex-1 rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100"
+              className="flex-1 rounded-2xl bg-gradient-to-r from-teal-500 to-teal-700 px-6 py-4 text-base font-bold text-white shadow-lg shadow-teal-900/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-900/30 focus:outline-none focus:ring-4 focus:ring-teal-100"
             >
-              ค้นหา
+              🔍 ค้นหา
             </button>
             <button
               type="button"
               onClick={handleClearFilters}
               disabled={!hasActiveFilters}
-              className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-2xl border border-white bg-white/80 px-6 py-4 text-base font-bold text-slate-700 shadow-sm transition-all duration-300 hover:border-teal-300 hover:bg-white hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              ล้างตัวกรอง
+              ❌ ล้างตัวกรอง
             </button>
           </div>
         </form>

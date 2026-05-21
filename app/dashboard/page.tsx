@@ -190,10 +190,10 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-4 text-slate-950 sm:px-6 sm:py-8 lg:px-8">
+    <div className="min-h-screen bg-transparent px-4 py-8 sm:px-6 lg:px-8">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         {/* ─── Header ─── */}
-        <header className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white px-5 py-6 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:px-6">
+        <header className="flex flex-col gap-4 rounded-3xl border border-white/60 bg-white/70 px-6 py-8 shadow-xl shadow-teal-900/5 backdrop-blur-xl sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-medium text-teal-700">ระบบรับคำร้อง</p>
             <h1 className="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl">
@@ -238,7 +238,9 @@ export default function DashboardPage() {
         {!loading && data && (
           <>
             {/* ตัวเลขรวม */}
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-teal-600 to-emerald-700 px-6 py-6 text-white shadow-md">
+            <div className="relative overflow-hidden rounded-3xl border border-teal-500/30 bg-gradient-to-br from-teal-600 via-teal-700 to-emerald-800 px-8 py-8 text-white shadow-xl shadow-teal-900/20">
+              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl"></div>
+              <div className="relative z-10">
               <p className="text-sm font-medium text-teal-100">
                 จำนวนคำร้องทั้งหมด
               </p>
@@ -246,6 +248,7 @@ export default function DashboardPage() {
                 {data.total.toLocaleString("th-TH")}
               </p>
               <p className="mt-1 text-sm text-teal-200">รายการ</p>
+              </div>
             </div>
 
             {/* Grid การ์ดแยกตามประเภท */}
@@ -257,11 +260,11 @@ export default function DashboardPage() {
                   <Link
                     key={item.type}
                     href={`/dashboard/${encodeURIComponent(item.type)}`}
-                    className={`group relative flex flex-col overflow-hidden rounded-xl border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${style.border}`}
+                    className={`group relative flex flex-col overflow-hidden rounded-3xl border bg-white/80 p-6 shadow-lg shadow-slate-200/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-teal-900/10 ${style.border}`}
                   >
                     {/* ไอคอนวงกลม */}
                     <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-lg text-lg ${style.iconBg}`}
+                      className={`flex h-12 w-12 items-center justify-center rounded-2xl text-xl shadow-inner ${style.iconBg}`}
                     >
                       {style.icon}
                     </div>
