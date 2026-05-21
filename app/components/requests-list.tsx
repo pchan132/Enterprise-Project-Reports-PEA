@@ -104,6 +104,14 @@ function getStatusOptions(currentStatus: string) {
     : [currentStatus, ...REQUEST_STATUSES];
 }
 
+/** ตัดข้อความให้ไม่เกิน maxWords คำ — ถ้ายาวกว่าจะต่อท้ายด้วย "…" */
+function truncateWords(text: string | null | undefined, maxWords = 10): string {
+  if (!text) return "-";
+  const words = text.split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(" ") + "…";
+}
+
 export default function RequestsList({
   title = "คำร้องทั้งหมด",
   description = "แสดงข้อมูลจาก backend โดยกดที่ชื่อหรือเลขคำร้องเพื่อดูรายละเอียดทั้งหมด",
@@ -434,6 +442,7 @@ export default function RequestsList({
                       <th className="px-4 py-3 font-semibold">ผู้ยื่นคำร้อง</th>
                       <th className="px-4 py-3 font-semibold">พื้นที่</th>
                       <th className="px-4 py-3 font-semibold">ประเภท</th>
+                      <th className="px-4 py-3 font-semibold">รายละเอียด</th>
                       <th className="px-4 py-3 font-semibold">วันที่รับ</th>
                       <th className="px-4 py-3 font-semibold">วันนัด</th>
                       <th className="px-4 py-3 font-semibold">สถานะ</th>
@@ -464,6 +473,11 @@ export default function RequestsList({
                         <td className="px-4 py-4">
                           <div>{Array.isArray(request.requestType) ? request.requestType.join(", ") : request.requestType}</div>
                           <div className="mt-1 text-slate-500">{request.meterOption ?? "-"}</div>
+                        </td>
+                        <td className="px-4 py-4 max-w-[200px]">
+                          <div className="text-slate-600 text-sm" title={request.description ?? ""}>
+                            {truncateWords(request.description, 10)}
+                          </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           {formatThaiDate(request.requestDate)}
@@ -554,6 +568,12 @@ export default function RequestsList({
                         <dt className="text-slate-500">มิเตอร์</dt>
                         <dd className="font-medium text-slate-900">
                           {request.meterOption ?? "-"}
+                        </dd>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <dt className="text-slate-500">รายละเอียด</dt>
+                        <dd className="font-medium text-slate-900">
+                          {truncateWords(request.description, 10)}
                         </dd>
                       </div>
                       <div>
