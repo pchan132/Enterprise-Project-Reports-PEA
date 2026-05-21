@@ -13,7 +13,12 @@ export const runtime = "nodejs";
  * Response shape:
  * {
  *   total: number,
- *   byType: { type: string, label: string, count: number }[]
+ *   byType: {
+ *     type: string,
+ *     label: string,
+ *     count: number,
+ *     statusCounts: { status: string, count: number }[]
+ *   }[]
  * }
  */
 export async function GET() {
@@ -32,6 +37,30 @@ export async function GET() {
       ORDER BY count DESC
     `;
 
+    // นับจำนวนแยกตาม requestType + status
+    const typeStatusCounts = await prisma.$queryRaw<
+      { type_value: string; status: string; count: bigint }[]
+    >`
+      SELECT t.type_value, e.status, COUNT(*) AS count
+      FROM electrical_requests e,
+           LATERAL unnest(e.request_type) AS t(type_value)
+      GROUP BY t.type_value, e.status
+      ORDER BY t.type_value, count DESC
+    `;
+
+    // สร้าง Map<requestType, { status, count }[]>
+    const statusMap = new Map<string, { status: string; count: number }[]>();
+    for (const row of typeStatusCounts) {
+      const key = row.type_value;
+      if (!statusMap.has(key)) {
+        statusMap.set(key, []);
+      }
+      statusMap.get(key)!.push({
+        status: row.status,
+        count: Number(row.count),
+      });
+    }
+
     // สร้าง Map เพื่อ lookup จำนวนที่ได้จาก DB
     const countMap = new Map(
       typeCounts.map((row) => [row.type_value, Number(row.count)]),
@@ -42,13 +71,19 @@ export async function GET() {
       type: rt.value,
       label: rt.label,
       count: countMap.get(rt.value) ?? 0,
+      statusCounts: statusMap.get(rt.value) ?? [],
     }));
 
     // เพิ่มประเภทที่อยู่ใน DB แต่ไม่มีใน REQUEST_TYPES (กรณีข้อมูลเก่า)
     const knownValues = new Set(REQUEST_TYPES.map((rt) => rt.value));
     for (const [typeValue, count] of countMap) {
       if (!knownValues.has(typeValue)) {
-        byType.push({ type: typeValue, label: typeValue, count });
+        byType.push({
+          type: typeValue,
+          label: typeValue,
+          count,
+          statusCounts: statusMap.get(typeValue) ?? [],
+        });
       }
     }
 

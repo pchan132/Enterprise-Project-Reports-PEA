@@ -104,6 +104,14 @@ function getStatusOptions(currentStatus: string) {
     : [currentStatus, ...REQUEST_STATUSES];
 }
 
+/** ตัดข้อความให้ไม่เกิน maxWords คำ — ถ้ายาวกว่าจะต่อท้ายด้วย "…" */
+function truncateWords(text: string | null | undefined, maxWords = 10): string {
+  if (!text) return "-";
+  const words = text.split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(" ") + "…";
+}
+
 export default function RequestsList({
   title = "คำร้องทั้งหมด",
   description = "แสดงข้อมูลจาก backend โดยกดที่ชื่อหรือเลขคำร้องเพื่อดูรายละเอียดทั้งหมด",
@@ -355,9 +363,9 @@ export default function RequestsList({
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-4 text-slate-950 sm:px-6 sm:py-8 lg:px-8">
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <header className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white px-4 py-5 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:px-6">
+    <div className="min-h-screen bg-transparent px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <header className="flex flex-col gap-4 rounded-3xl border border-white/60 bg-white/70 px-6 py-8 shadow-xl shadow-teal-900/5 backdrop-blur-xl sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-medium text-teal-700">ระบบรับคำร้อง</p>
             <h1 className="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl">
@@ -370,17 +378,17 @@ export default function RequestsList({
           {showAddButton && (
             <Link
               href="/requests/new"
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100"
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-teal-700 px-6 text-base font-bold text-white shadow-sm transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100"
             >
-              เพิ่มคำร้องใหม่
+              + เพิ่มคำร้องใหม่
             </Link>
           )}
         </header>
 
-        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-2 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <section className="overflow-hidden rounded-3xl border border-white/60 bg-white/80 shadow-xl shadow-teal-900/5 backdrop-blur-xl">
+          <div className="flex flex-col gap-2 border-b border-slate-200/60 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-base font-semibold text-slate-950">รายการคำร้อง</h2>
+              <h2 className="text-lg font-bold text-slate-900">รายการคำร้อง</h2>
               <p className="text-sm text-slate-500">
                 รายการที่ {startItem}-{endItem} จากทั้งหมด {totalItems} รายการ
               </p>
@@ -428,61 +436,67 @@ export default function RequestsList({
             <>
               <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full border-collapse text-left text-sm">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                  <thead className="bg-slate-100 text-sm uppercase tracking-wider text-slate-600">
                     <tr>
-                      <th className="px-4 py-3 font-semibold">เลขคำร้อง</th>
-                      <th className="px-4 py-3 font-semibold">ผู้ยื่นคำร้อง</th>
-                      <th className="px-4 py-3 font-semibold">พื้นที่</th>
-                      <th className="px-4 py-3 font-semibold">ประเภท</th>
-                      <th className="px-4 py-3 font-semibold">วันที่รับ</th>
-                      <th className="px-4 py-3 font-semibold">วันนัด</th>
-                      <th className="px-4 py-3 font-semibold">สถานะ</th>
-                      <th className="px-4 py-3 text-right font-semibold">จัดการ</th>
+                      <th className="px-5 py-4 font-bold">เลขคำร้อง</th>
+                      <th className="px-5 py-4 font-bold">ผู้ยื่นคำร้อง</th>
+                      <th className="px-5 py-4 font-bold">พื้นที่</th>
+                      <th className="px-5 py-4 font-bold">ประเภท</th>
+                      <th className="px-5 py-4 font-bold">รายละเอียด</th>
+                      <th className="px-5 py-4 font-bold">วันที่รับ</th>
+                      <th className="px-5 py-4 font-bold">วันนัด</th>
+                      <th className="px-5 py-4 font-bold">สถานะ</th>
+                      <th className="px-5 py-4 text-right font-bold">จัดการ</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     {requests.map((request) => (
-                      <tr key={request.id} className="align-top transition hover:bg-slate-50">
-                        <td className="px-4 py-4 font-semibold text-slate-950">
-                          <Link href={`/requests/${request.id}`} className="hover:text-teal-700">
+                      <tr key={request.id} className="align-top text-base transition hover:bg-slate-50/80">
+                        <td className="px-5 py-5 font-bold text-teal-800">
+                          <Link href={`/requests/${request.id}`} className="hover:text-teal-600 underline-offset-4 hover:underline">
                             {displayRequestNo(request)}
                           </Link>
                         </td>
-                        <td className="px-4 py-4">
+                        <td className="px-5 py-5">
                           <Link
                             href={`/requests/${request.id}`}
-                            className="font-medium text-slate-950 hover:text-teal-700"
+                            className="font-bold text-slate-900 hover:text-teal-700"
                           >
                             {displayCustomerName(request)}
                           </Link>
-                          <div className="mt-1 text-slate-500">{request.phone}</div>
+                          <div className="mt-1 text-sm text-slate-500">{request.phone}</div>
                         </td>
-                        <td className="px-4 py-4">
-                          <div>{request.district}</div>
-                          <div className="mt-1 text-slate-500">{request.subDistrict}</div>
+                        <td className="px-5 py-5">
+                          <div className="font-medium text-slate-800">{request.district}</div>
+                          <div className="mt-1 text-sm text-slate-500">{request.subDistrict}</div>
                         </td>
-                        <td className="px-4 py-4">
-                          <div>{Array.isArray(request.requestType) ? request.requestType.join(", ") : request.requestType}</div>
-                          <div className="mt-1 text-slate-500">{request.meterOption ?? "-"}</div>
+                        <td className="px-5 py-5">
+                          <div className="font-medium text-slate-800">{Array.isArray(request.requestType) ? request.requestType.join(", ") : request.requestType}</div>
+                          <div className="mt-1 text-sm text-slate-500">{request.meterOption ?? "-"}</div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-5 py-5 max-w-[240px]">
+                          <div className="text-slate-600 text-sm leading-relaxed" title={request.description ?? ""}>
+                            {truncateWords(request.description, 10)}
+                          </div>
+                        </td>
+                        <td className="px-5 py-5 whitespace-nowrap font-medium text-slate-700">
                           {formatThaiDate(request.requestDate)}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-5 py-5 whitespace-nowrap font-medium text-slate-700">
                           {formatThaiDate(request.targetDate)}
                         </td>
-                        <td className="px-4 py-4">
+                        <td className="px-5 py-5">
                           <span
-                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(request.status)}`}
+                            className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-bold shadow-sm ${getStatusClass(request.status)}`}
                           >
                             {request.status}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-right">
+                        <td className="px-5 py-5 text-right">
                           <div className="inline-flex items-center gap-2">
                             <Link
                               href={`/requests/${request.id}/edit`}
-                              className="h-10 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100"
+                              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-teal-600 hover:text-teal-700 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-teal-100"
                             >
                               แก้ไข
                             </Link>
@@ -491,7 +505,7 @@ export default function RequestsList({
                               onChange={(event) =>
                                 updateStatus(request, event.target.value as RequestStatus)
                               }
-                              className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-teal-600 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                              className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm outline-none transition hover:border-teal-600 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
                               aria-label={`เปลี่ยนสถานะ ${displayRequestNo(request)}`}
                             >
                               {resolveStatusChoices(request.status).map((status) => (
@@ -508,81 +522,85 @@ export default function RequestsList({
                 </table>
               </div>
 
-              <div className="divide-y divide-slate-200 lg:hidden">
+              <div className="flex flex-col gap-5 bg-transparent p-4 sm:p-6 lg:hidden">
                 {requests.map((request) => (
-                  <article key={request.id} className="px-4 py-4">
-                    <div className="flex items-start justify-between gap-3">
+                  <article key={request.id} className="rounded-3xl border border-white bg-white p-6 shadow-lg shadow-teal-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-teal-900/10">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <Link
                           href={`/requests/${request.id}`}
-                          className="font-semibold text-slate-950 hover:text-teal-700"
+                          className="text-lg font-bold text-teal-800 hover:text-teal-600 underline-offset-4 hover:underline"
                         >
                           {displayRequestNo(request)}
                         </Link>
                         <Link
                           href={`/requests/${request.id}`}
-                          className="mt-1 block text-sm text-slate-600 hover:text-teal-700"
+                          className="mt-1 block text-base font-semibold text-slate-900 hover:text-teal-700"
                         >
                           {displayCustomerName(request)}
                         </Link>
                       </div>
                       <span
-                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(request.status)}`}
+                        className={`inline-flex w-fit items-center rounded-full border px-4 py-1.5 text-sm font-bold shadow-sm ${getStatusClass(request.status)}`}
                       >
                         {request.status}
                       </span>
                     </div>
 
-                    <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-                      <div>
-                        <dt className="text-slate-500">เบอร์โทร</dt>
-                        <dd className="font-medium text-blue-600">
-                          <a href={`tel:${request.phone}`}>{request.phone}</a>
+                    <dl className="mt-5 grid gap-4 text-base sm:grid-cols-2">
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <dt className="text-sm font-medium text-slate-500">เบอร์โทร</dt>
+                        <dd className="mt-1 text-lg font-bold text-blue-600">
+                          <a href={`tel:${request.phone}`} className="flex items-center gap-2">
+                            📞 {request.phone}
+                          </a>
                         </dd>
                       </div>
-                      <div>
-                        <dt className="text-slate-500">พื้นที่</dt>
-                        <dd className="font-medium text-slate-900">
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <dt className="text-sm font-medium text-slate-500">พื้นที่</dt>
+                        <dd className="mt-1 font-semibold text-slate-900">
                           {request.subDistrict}, {request.district}
                         </dd>
                       </div>
-                      <div>
-                        <dt className="text-slate-500">ประเภท</dt>
-                        <dd className="font-medium text-slate-900">{Array.isArray(request.requestType) ? request.requestType.join(", ") : request.requestType}</dd>
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <dt className="text-sm font-medium text-slate-500">ประเภท</dt>
+                        <dd className="mt-1 font-semibold text-slate-900">{Array.isArray(request.requestType) ? request.requestType.join(", ") : request.requestType}</dd>
                       </div>
-                      <div>
-                        <dt className="text-slate-500">มิเตอร์</dt>
-                        <dd className="font-medium text-slate-900">
+                      <div className="rounded-lg bg-slate-50 p-3">
+                        <dt className="text-sm font-medium text-slate-500">มิเตอร์</dt>
+                        <dd className="mt-1 font-semibold text-slate-900">
                           {request.meterOption ?? "-"}
                         </dd>
                       </div>
-                      <div>
-                        <dt className="text-slate-500">วันที่รับ</dt>
-                        <dd className="font-medium text-slate-900">
-                          {formatThaiDate(request.requestDate)}
+                      <div className="rounded-lg bg-slate-50 p-3 sm:col-span-2">
+                        <dt className="text-sm font-medium text-slate-500">รายละเอียด</dt>
+                        <dd className="mt-1 font-medium text-slate-700">
+                          {truncateWords(request.description, 15)}
                         </dd>
                       </div>
-                      <div>
-                        <dt className="text-slate-500">วันนัด</dt>
-                        <dd className="font-medium text-slate-900">
-                          {formatThaiDate(request.targetDate)}
-                        </dd>
+                      <div className="flex gap-4 sm:col-span-2">
+                        <div className="flex-1 rounded-lg bg-slate-50 p-3">
+                          <dt className="text-sm font-medium text-slate-500">วันที่รับ</dt>
+                          <dd className="mt-1 font-semibold text-slate-900">
+                            {formatThaiDate(request.requestDate)}
+                          </dd>
+                        </div>
+                        <div className="flex-1 rounded-lg bg-slate-50 p-3">
+                          <dt className="text-sm font-medium text-slate-500">วันนัด</dt>
+                          <dd className="mt-1 font-semibold text-slate-900">
+                            {formatThaiDate(request.targetDate)}
+                          </dd>
+                        </div>
                       </div>
                     </dl>
 
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      <Link
-                        href={`/requests/${request.id}/edit`}
-                        className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100"
-                      >
-                        แก้ไข
-                      </Link>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                       <select
                         value={request.status}
                         onChange={(event) =>
                           updateStatus(request, event.target.value as RequestStatus)
                         }
-                        className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-teal-600 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+                        className="h-12 w-full flex-1 rounded-xl border border-slate-300 bg-white px-4 text-base font-bold text-slate-800 shadow-sm outline-none transition hover:border-teal-600 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
                         aria-label={`เปลี่ยนสถานะ ${displayRequestNo(request)}`}
                       >
                         {resolveStatusChoices(request.status).map((status) => (
@@ -591,6 +609,12 @@ export default function RequestsList({
                           </option>
                         ))}
                       </select>
+                      <Link
+                        href={`/requests/${request.id}/edit`}
+                        className="inline-flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-slate-100 px-4 text-base font-bold text-slate-700 shadow-sm transition hover:border-teal-600 hover:bg-white hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100"
+                      >
+                        ✏️ แก้ไข
+                      </Link>
                     </div>
                   </article>
                 ))}
@@ -598,8 +622,8 @@ export default function RequestsList({
             </>
           )}
 
-          <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <p className="text-sm text-slate-500">
+          <div className="flex flex-col gap-4 border-t border-slate-200/60 px-6 py-6 sm:flex-row sm:items-center sm:justify-between bg-white/50">
+            <p className="text-base font-medium text-slate-600">
               หน้า {currentPage} จาก {totalPages}
             </p>
             <div className="flex flex-wrap items-center gap-2">
@@ -607,7 +631,7 @@ export default function RequestsList({
                 type="button"
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-12 rounded-xl border border-slate-300 bg-white px-4 text-base font-bold text-slate-700 shadow-sm transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 ก่อนหน้า
               </button>
@@ -617,7 +641,7 @@ export default function RequestsList({
                   type="button"
                   onClick={() => goToPage(page)}
                   aria-current={currentPage === page ? "page" : undefined}
-                  className={`h-10 min-w-10 rounded-lg border px-3 text-sm font-semibold transition focus:outline-none focus:ring-4 focus:ring-teal-100 ${currentPage === page
+                  className={`h-12 min-w-[3rem] rounded-xl border px-3 text-base font-bold shadow-sm transition focus:outline-none focus:ring-4 focus:ring-teal-100 ${currentPage === page
                     ? "border-teal-700 bg-teal-700 text-white"
                     : "border-slate-300 bg-white text-slate-700 hover:border-teal-600 hover:text-teal-700"
                     }`}
@@ -629,7 +653,7 @@ export default function RequestsList({
                 type="button"
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-12 rounded-xl border border-slate-300 bg-white px-4 text-base font-bold text-slate-700 shadow-sm transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 ถัดไป
               </button>

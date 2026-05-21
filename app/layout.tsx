@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" className="h-full antialiased">
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 selection:bg-teal-200 selection:text-teal-900">
         <TopNavigation />
         {children}
       </body>
