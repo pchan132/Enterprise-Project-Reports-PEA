@@ -33,6 +33,7 @@ type FilterValues = {
   targetDate: string;
   isFollowUp: string;
   description: string;
+  sortOrder: "desc" | "asc";
 };
 
 type StatusTransition = {
@@ -67,6 +68,7 @@ const statusStyles: Record<RequestStatus, string> = {
   รอโทรแจ้ง: "border-orange-200 bg-orange-50 text-orange-700",
   รอทำชำระเงิน: "border-yellow-200 bg-yellow-50 text-yellow-700",
   "รอติดตั้งมิเตอร์ / ดำเนินการเพิ่ม / ย้าย": "border-violet-200 bg-violet-50 text-violet-700",
+  รอดำเนินการยกเลิก: "border-red-200 bg-red-50 text-red-700",
   "กำลังดำเนินการ หน้างาน": "border-blue-200 bg-blue-50 text-blue-700",
   เสร็จสิ้น: "border-emerald-200 bg-emerald-50 text-emerald-700",
   ยกเลิก: "border-slate-200 bg-slate-50 text-slate-700",
@@ -153,6 +155,7 @@ export default function RequestsList({
     targetDate: "",
     isFollowUp: "",
     description: "",
+    sortOrder: "desc",
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -233,6 +236,7 @@ export default function RequestsList({
         if (filters.targetDate) searchParams.set("targetDate", filters.targetDate);
         if (filters.isFollowUp) searchParams.set("isFollowUp", filters.isFollowUp);
         if (filters.description) searchParams.set("description", filters.description);
+        searchParams.set("sortOrder", filters.sortOrder);
 
         if (fixedStatuses && fixedStatuses.length > 0) {
           // ส่งหลาย status (backend รองรับ ?status=A&status=B)
@@ -357,6 +361,7 @@ export default function RequestsList({
       targetDate: "",
       isFollowUp: "",
       description: "",
+      sortOrder: "desc",
     });
     setCurrentPage(1);
     setMessage("");

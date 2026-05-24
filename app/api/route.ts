@@ -21,11 +21,17 @@ export async function GET(request: NextRequest) {
   const where = buildElectricalRequestBaseWhere(searchParams);
   const keyword = parseSearchKeyword(searchParams);
 
+  // Sort direction: default DESC (ใหม่สุดก่อน)
+  const sortOrderParam = searchParams.get("sortOrder")?.toLowerCase();
+  const sortOrder: "asc" | "desc" =
+    sortOrderParam === "asc" ? "asc" : "desc";
+  const orderBy = [{ requestDate: sortOrder }, { createdAt: sortOrder }];
+
   try {
     if (keyword) {
       const candidates = await prisma.electricalRequest.findMany({
         where,
-        orderBy: [{ requestDate: "desc" }, { createdAt: "desc" }],
+        orderBy,
       });
       const matchedRequests = searchElectricalRequests(candidates, keyword);
       const requests = matchedRequests.slice(skip, skip + pageSize);
@@ -44,7 +50,7 @@ export async function GET(request: NextRequest) {
     const [requests, total] = await prisma.$transaction([
       prisma.electricalRequest.findMany({
         where,
-        orderBy: [{ requestDate: "desc" }, { createdAt: "desc" }],
+        orderBy,
         skip,
         take: pageSize,
       }),

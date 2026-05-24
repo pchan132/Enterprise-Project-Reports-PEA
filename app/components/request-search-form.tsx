@@ -25,6 +25,7 @@ type FilterValues = {
   targetDate: string;
   isFollowUp: string;
   description: string;
+  sortOrder: "desc" | "asc";
 };
 
 type RequestSearchFormProps = {
@@ -65,6 +66,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
     targetDate: "",
     isFollowUp: "",
     description: "",
+    sortOrder: "desc",
   });
 
   const subDistricts = filters.district
@@ -133,6 +135,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
       targetDate: "",
       isFollowUp: "",
       description: "",
+      sortOrder: "desc",
     });
     onClear();
   }
@@ -172,6 +175,51 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
             placeholder="กรอกนามสกุล"
             className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
           />
+        </div>
+      </div>
+
+      {/* การเรียงลำดับ: DESC / ASC */}
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-bold text-slate-700">เรียงตามวันที่รับ:</span>
+        <div className="inline-flex overflow-hidden rounded-xl border border-slate-300 shadow-sm">
+          <button
+            type="button"
+            onClick={() => {
+              const newFilters = { ...filters, sortOrder: "desc" as const };
+              setFilters(newFilters);
+              onApplyFilters(newFilters);
+            }}
+            className={[
+              "flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold transition-all duration-200",
+              filters.sortOrder === "desc"
+                ? "bg-teal-600 text-white shadow-inner"
+                : "bg-white text-slate-600 hover:bg-slate-50 hover:text-teal-700",
+            ].join(" ")}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v10.5" />
+            </svg>
+            ใหม่สุดก่อน
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const newFilters = { ...filters, sortOrder: "asc" as const };
+              setFilters(newFilters);
+              onApplyFilters(newFilters);
+            }}
+            className={[
+              "flex items-center gap-1.5 border-l border-slate-300 px-4 py-2.5 text-sm font-bold transition-all duration-200",
+              filters.sortOrder === "asc"
+                ? "bg-teal-600 text-white shadow-inner"
+                : "bg-white text-slate-600 hover:bg-slate-50 hover:text-teal-700",
+            ].join(" ")}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21l3.75-3.75" />
+            </svg>
+            เก่าสุดก่อน
+          </button>
         </div>
       </div>
 
