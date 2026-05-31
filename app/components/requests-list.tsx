@@ -114,6 +114,9 @@ function truncateWords(text: string | null | undefined, maxWords = 10): string {
   return words.slice(0, maxWords).join(" ") + "…";
 }
 
+/** Fields whose default values should NOT count as "active filters" */
+const IGNORED_FILTER_KEYS = new Set(["requestType", "sortOrder", "province"]);
+
 export default function RequestsList({
   title = "คำร้องทั้งหมด",
   description = "แสดงข้อมูลจาก backend โดยกดที่ชื่อหรือเลขคำร้องเพื่อดูรายละเอียดทั้งหมด",
@@ -170,12 +173,13 @@ export default function RequestsList({
     [totalPages],
   );
 
-  // Real-time search สำหรับ ชื่อ, นามสกุล, อำเภอ, ตำบล พร้อม debounce 300ms
+  // Real-time search สำหรับ ชื่อ, นามสกุล, อำเภอ, ตำบล, สถานะ พร้อม debounce 300ms
   function handleRealtimeSearch(
     firstName: string,
     lastName: string,
     district: string,
     subDistrict: string,
+    status: string,
   ) {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
@@ -188,6 +192,7 @@ export default function RequestsList({
         lastName,
         district,
         subDistrict,
+        status,
       }));
       setCurrentPage(1);
     }, 300);
@@ -409,12 +414,12 @@ export default function RequestsList({
               onRealtimeSearch={handleRealtimeSearch}
               onClear={handleClearFilters}
             />
-            {(filters.requestType.length > 0 || Object.entries(filters).some(([key, v]) => key !== "requestType" && v && v !== "ลพบุรี")) && (
+            {(filters.requestType.length > 0 || Object.entries(filters).some(([key, v]) => !IGNORED_FILTER_KEYS.has(key) && v !== "")) && (
               <p className="mt-4 text-sm text-slate-500">
                 มีการใช้ตัวกรอง{" "}
                 {filters.requestType.length +
                   Object.entries(filters).filter(
-                    ([key, v]) => key !== "requestType" && v && v !== "ลพบุรี",
+                    ([key, v]) => !IGNORED_FILTER_KEYS.has(key) && v !== "",
                   ).length}{" "}
                 รายการ
               </p>
@@ -433,7 +438,7 @@ export default function RequestsList({
             </div>
           ) : requests.length === 0 ? (
             <div className="px-4 py-10 text-center text-sm text-slate-500">
-              {(filters.requestType.length > 0 || Object.entries(filters).some(([key, v]) => key !== "requestType" && v && v !== "ลพบุรี"))
+              {(filters.requestType.length > 0 || Object.entries(filters).some(([key, v]) => !IGNORED_FILTER_KEYS.has(key) && v !== ""))
                 ? "ไม่พบข้อมูลที่ตรงกับตัวกรอง"
                 : emptyMessage}
             </div>

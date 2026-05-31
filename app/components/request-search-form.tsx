@@ -30,7 +30,7 @@ type FilterValues = {
 
 type RequestSearchFormProps = {
   onApplyFilters: (filters: FilterValues) => void;
-  onRealtimeSearch: (firstName: string, lastName: string, district: string, subDistrict: string) => void;
+  onRealtimeSearch: (firstName: string, lastName: string, district: string, subDistrict: string, status: string) => void;
   onClear: () => void;
 };
 
@@ -78,11 +78,15 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
       // เมื่อเปลี่ยนอำเภอ ให้ล้างตำบลด้วย
       const newFilters = { ...filters, district: value, subDistrict: "" };
       setFilters(newFilters);
-      onRealtimeSearch(newFilters.firstName, newFilters.lastName, value, "");
+      onRealtimeSearch(newFilters.firstName, newFilters.lastName, value, "", newFilters.status);
     } else if (field === "subDistrict") {
       // ตำบลมาจาก select ดังนั้นค่าถูกต้องเสมอ — ส่ง real-time ได้ทันที
       setFilters((prev) => ({ ...prev, subDistrict: value }));
-      onRealtimeSearch(filters.firstName, filters.lastName, filters.district, value);
+      onRealtimeSearch(filters.firstName, filters.lastName, filters.district, value, filters.status);
+    } else if (field === "status") {
+      // สถานะมาจาก select — ส่ง real-time ได้ทันที
+      setFilters((prev) => ({ ...prev, status: value }));
+      onRealtimeSearch(filters.firstName, filters.lastName, filters.district, filters.subDistrict, value);
     } else {
       setFilters((prev) => ({ ...prev, [field]: value }));
 
@@ -94,6 +98,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
           newFilters.lastName,
           newFilters.district,
           newFilters.subDistrict,
+          newFilters.status,
         );
       }
     }
@@ -140,10 +145,13 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
     onClear();
   }
 
+  /** Fields whose default values should NOT count as "active filters" */
+  const IGNORED_FILTER_KEYS = new Set(["requestType", "sortOrder", "province"]);
+
   const hasActiveFilters =
     filters.requestType.length > 0 ||
     Object.entries(filters).some(
-      ([key, v]) => key !== "requestType" && v && v !== "ลพบุรี",
+      ([key, v]) => !IGNORED_FILTER_KEYS.has(key) && v !== "",
     );
 
   return (
@@ -267,6 +275,26 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
         </div>
       </div>
 
+      {/* สถานะ (Real Time) */}
+      <div>
+        <label htmlFor="status" className="block text-base font-bold text-slate-800">
+          สถานะ
+        </label>
+        <select
+          id="status"
+          value={filters.status}
+          onChange={(e) => handleFilterChange("status", e.target.value)}
+          className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+        >
+          <option value="">-- ทั้งหมด --</option>
+          {REQUEST_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* ฟิลเตอร์เพิ่มเติม */}
       <button
         type="button"
@@ -299,24 +327,6 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
                 placeholder="เบอร์โทร"
                 className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
               />
-            </div>
-            <div>
-              <label htmlFor="status" className="block text-base font-bold text-slate-800">
-                สถานะ
-              </label>
-              <select
-                id="status"
-                value={filters.status}
-                onChange={(e) => handleFilterChange("status", e.target.value)}
-                className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
-              >
-                <option value="">-- ทั้งหมด --</option>
-                {REQUEST_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
 
