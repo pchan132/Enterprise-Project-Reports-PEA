@@ -81,14 +81,20 @@ export function buildElectricalRequestBaseWhere(searchParams: URLSearchParams) {
   }
 
   if (requestDate) {
+    const dateStart = new Date(`${requestDate}T00:00:00Z`);
+    const dateEnd = new Date(`${requestDate}T23:59:59.999Z`);
     where.requestDate = {
-      equals: new Date(`${requestDate}T00:00:00Z`),
+      gte: dateStart,
+      lte: dateEnd,
     };
   }
 
   if (targetDate) {
+    const dateStart = new Date(`${targetDate}T00:00:00Z`);
+    const dateEnd = new Date(`${targetDate}T23:59:59.999Z`);
     where.targetDate = {
-      equals: new Date(`${targetDate}T00:00:00Z`),
+      gte: dateStart,
+      lte: dateEnd,
     };
   }
 
@@ -111,9 +117,11 @@ export function buildElectricalRequestBaseWhere(searchParams: URLSearchParams) {
   }
 
   if (phone) {
-    where.phone = {
-      contains: phone,
-    };
+    where.OR = [
+      ...(where.OR ?? []),
+      { phone: { contains: phone } },
+      { phone2: { contains: phone } },
+    ];
   }
 
   if (address) {
