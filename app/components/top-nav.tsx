@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { logout } from "@/app/actions/auth";
 
 type NavLink = {
   href: string;
@@ -32,7 +33,11 @@ const navLinks: NavLink[] = [
   },
 ];
 
-export default function TopNavigation() {
+type TopNavigationProps = {
+  username: string;
+};
+
+export default function TopNavigation({ username }: TopNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -68,13 +73,32 @@ export default function TopNavigation() {
             );
           })}
         </div>
-        <button
-          type="button"
-          onClick={handleBack}
-          className="inline-flex h-11 w-full sm:w-auto items-center justify-center rounded-xl border border-slate-200/60 bg-white/80 px-5 text-base font-bold text-slate-700 shadow-sm transition-all duration-200 hover:border-teal-300 hover:text-teal-700 hover:shadow-md hover:bg-white focus:outline-none focus:ring-4 focus:ring-teal-100"
-        >
-          ⬅️ ย้อนกลับ
-        </button>
+        <div className="flex items-center gap-2">
+          {/* แสดงชื่อผู้ใช้ */}
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-teal-50 px-3 py-1.5 text-sm font-semibold text-teal-700">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            {username}
+          </span>
+          {/* ปุ่ม Logout */}
+          <form action={logout}>
+            <button
+              type="submit"
+              className="inline-flex h-9 items-center justify-center rounded-lg border border-rose-200/60 bg-white/80 px-3 text-sm font-bold text-rose-600 shadow-sm transition-all duration-200 hover:border-rose-300 hover:bg-rose-50 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-rose-100"
+            >
+              ออกจากระบบ
+            </button>
+          </form>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex h-11 w-full sm:w-auto items-center justify-center rounded-xl border border-slate-200/60 bg-white/80 px-5 text-base font-bold text-slate-700 shadow-sm transition-all duration-200 hover:border-teal-300 hover:text-teal-700 hover:shadow-md hover:bg-white focus:outline-none focus:ring-4 focus:ring-teal-100"
+          >
+            ⬅️ ย้อนกลับ
+          </button>
+        </div>
       </nav>
     </div>
   );
