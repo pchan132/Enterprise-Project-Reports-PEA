@@ -99,6 +99,12 @@ const TYPE_STYLES: Record<
     icon: "🔁",
     iconBg: "bg-orange-100 text-orange-700",
   },
+  สับเปลี่ยน: {
+    gradient: "from-yellow-500 to-amber-600",
+    border: "border-yellow-200",
+    icon: "🔧",
+    iconBg: "bg-yellow-100 text-yellow-700",
+  },
   คำร้องอื่นๆ: {
     gradient: "from-slate-400 to-slate-600",
     border: "border-slate-200",
