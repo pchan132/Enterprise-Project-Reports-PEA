@@ -31,6 +31,11 @@ const navLinks: NavLink[] = [
     label: "เพิ่มคำร้อง",
     isActive: (pathname) => pathname === "/requests/new",
   },
+  {
+    href: "/logbook",
+    label: "📒 สมุดบันทึก",
+    isActive: (pathname) => pathname === "/logbook",
+  },
 ];
 
 type TopNavigationProps = {

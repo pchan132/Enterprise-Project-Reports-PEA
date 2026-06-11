@@ -70,3 +70,70 @@ version: 1.01 API + Frontend + search
 📱 Responsive design - ใช้ได้ทั้มือถือและเดสก์ท็อป
 🔄 สามารถล้างตัวกรองทั้งหมดพร้อมกัน
 แอปพลิเคชันพร้อมใช้งานแล้ว! 🚀
+
+# Daily Logbook — สมุดบันทึกประจำวัน
+
+## Changes Made
+
+### New Files
+
+#### [route.ts](file:///e:/MyWeb/reportEletical/report-electical/app/api/logbook/route.ts) — API Endpoint
+- **`GET /api/logbook?date=YYYY-MM-DD`** — Fetches all `ElectricalRequest` records where `createdAt` falls on the specified date
+- Returns `{ summary, requests }` with:
+  - `summary.total` — total requests received that day
+  - `summary.completed` — requests in an assigned/completed status
+  - `summary.attentionNeeded` — requests containing "คำร้องอื่นๆ" type
+- Results sorted by `createdAt ASC` (chronological, oldest first)
+- Falls back to today's date if no `date` param provided
+
+---
+
+#### [page.tsx](file:///e:/MyWeb/reportEletical/report-electical/app/logbook/page.tsx) — Logbook Page (`/logbook`)
+- **Header**: Title "📒 สมุดบันทึกประจำวัน" with Thai formatted date, date picker, and print button
+- **3 Summary Cards**: Total requests, Completed/Assigned, Attention Needed — each with gradient backgrounds matching the existing brand design
+- **Chronological Table** with columns: เวลา, เลขคำร้อง, ชื่อ-นามสกุล, ประเภท, รายละเอียด, สถานะ
+- **Anomaly highlighting**: Rows with "คำร้องอื่นๆ" type get `bg-orange-50` background + ⚠️ icon
+- **Status badges**: Reuses the exact same colour palette as the existing dashboard
+- **Loading skeletons**: Matches the pulse animation pattern used elsewhere
+- **Empty state**: Friendly illustration when no data exists for the selected date
+
+---
+
+#### [supabase-logbook-example.ts](file:///e:/MyWeb/reportEletical/report-electical/app/lib/supabase-logbook-example.ts) — Supabase Reference
+- Reference-only file showing the equivalent Supabase JS client query
+- Not used in production — the live API uses Prisma
+
+---
+
+### Modified Files
+
+#### [top-nav.tsx](file:///e:/MyWeb/reportEletical/report-electical/app/components/top-nav.tsx)
+- Added `📒 สมุดบันทึก` navigation link pointing to `/logbook`
+
+#### [globals.css](file:///e:/MyWeb/reportEletical/report-electical/app/globals.css)
+- Added `@media print` rules:
+  - Hides navigation bar and sticky elements
+  - Removes shadows and glassmorphism effects
+  - Sets A4 landscape orientation with 1.5cm margins
+  - Prevents table row page breaks
+
+---
+
+## Print Behaviour
+
+The logbook page uses a **dual-layer print strategy**:
+
+| Element | Screen | Print |
+|---|---|---|
+| Top Navigation | ✅ Visible | ❌ Hidden via `@media print` in CSS |
+| Date Picker & Print Button | ✅ Visible | ❌ Hidden via `print:hidden` utility |
+| Summary Cards | ✅ Visible | ❌ Hidden via `print:hidden` utility |
+| Page Header + Thai Date | ✅ Visible | ✅ Printed (simplified styling) |
+| Log Table | ✅ Visible | ✅ Printed with clean borders |
+| Anomaly Legend | ✅ Visible | ✅ Printed |
+
+## Validation
+
+- ✅ `next build` — compiled successfully with 0 errors
+- ✅ TypeScript types check passed
+- ✅ ESLint linting passed
