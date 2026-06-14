@@ -92,6 +92,20 @@ function formatThaiDate(value: string | null) {
   }).format(new Date(`${value}T00:00:00+07:00`));
 }
 
+function formatThaiDateTime(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("th-TH", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 function displayRequestNo(request: ElectricalRequestDto) {
   return request.requestNo ?? request.id;
 }
@@ -373,9 +387,9 @@ export default function RequestsList({
   }
 
   return (
-    <div className="min-h-screen bg-transparent px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-3xl border border-white/60 bg-white/70 px-6 py-8 shadow-xl shadow-teal-900/5 backdrop-blur-xl sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex min-h-screen flex-1 flex-col bg-transparent px-2 py-4 text-slate-950 sm:px-4 sm:py-6 lg:px-6">
+      <main className="flex w-full flex-1 flex-col gap-4 sm:gap-6">
+        <header className="flex flex-col gap-3 rounded-2xl border border-white/60 bg-white/70 px-4 py-5 shadow-lg shadow-teal-900/5 backdrop-blur-xl sm:flex-row sm:items-end sm:justify-between sm:rounded-3xl sm:px-6 sm:py-8">
           <div>
             <p className="text-sm font-medium text-teal-700">ระบบรับคำร้อง</p>
             <h1 className="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl">
@@ -395,8 +409,8 @@ export default function RequestsList({
           )}
         </header>
 
-        <section className="overflow-hidden rounded-3xl border border-white/60 bg-white/80 shadow-xl shadow-teal-900/5 backdrop-blur-xl">
-          <div className="flex flex-col gap-2 border-b border-slate-200/60 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <section className="overflow-hidden rounded-2xl border border-white/60 bg-white/80 shadow-xl shadow-teal-900/5 backdrop-blur-xl sm:rounded-3xl">
+          <div className="flex flex-col gap-2 border-b border-slate-200/60 px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
             <div>
               <h2 className="text-lg font-bold text-slate-900">รายการคำร้อง</h2>
               <p className="text-sm text-slate-500">
@@ -408,7 +422,7 @@ export default function RequestsList({
             </p>
           </div>
 
-          <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
+          <div className="border-b border-slate-200 px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
             <RequestSearchForm
               onApplyFilters={handleApplyFilters}
               onRealtimeSearch={handleRealtimeSearch}
@@ -454,7 +468,7 @@ export default function RequestsList({
                       <th className="px-5 py-4 font-bold">ประเภท</th>
                       <th className="px-5 py-4 font-bold">รายละเอียด</th>
                       <th className="px-5 py-4 font-bold">วันที่รับ</th>
-                      <th className="px-5 py-4 font-bold">วันนัด</th>
+                      <th className="px-5 py-4 font-bold">แก้ไขล่าสุด</th>
                       <th className="px-5 py-4 font-bold">สถานะ</th>
                       <th className="px-5 py-4 text-right font-bold">จัดการ</th>
                     </tr>
@@ -493,7 +507,7 @@ export default function RequestsList({
                           {formatThaiDate(request.requestDate)}
                         </td>
                         <td className="px-5 py-5 whitespace-nowrap font-medium text-slate-700">
-                          {formatThaiDate(request.targetDate)}
+                          {formatThaiDateTime(request.updatedAt)}
                         </td>
                         <td className="px-5 py-5">
                           <span
@@ -532,9 +546,9 @@ export default function RequestsList({
                 </table>
               </div>
 
-              <div className="flex flex-col gap-5 bg-transparent p-4 sm:p-6 lg:hidden">
+              <div className="flex flex-col gap-3 bg-transparent p-2 sm:gap-4 sm:p-4 lg:hidden">
                 {requests.map((request) => (
-                  <article key={request.id} className="rounded-3xl border border-white bg-white p-6 shadow-lg shadow-teal-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-teal-900/10">
+                  <article key={request.id} className="rounded-2xl border border-white bg-white p-4 shadow-lg shadow-teal-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-teal-900/10 sm:rounded-3xl sm:p-6">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <Link
@@ -596,9 +610,9 @@ export default function RequestsList({
                           </dd>
                         </div>
                         <div className="flex-1 rounded-lg bg-slate-50 p-3">
-                          <dt className="text-sm font-medium text-slate-500">วันนัด</dt>
+                          <dt className="text-sm font-medium text-slate-500">แก้ไขล่าสุด</dt>
                           <dd className="mt-1 font-semibold text-slate-900">
-                            {formatThaiDate(request.targetDate)}
+                            {formatThaiDateTime(request.updatedAt)}
                           </dd>
                         </div>
                       </div>
@@ -632,16 +646,16 @@ export default function RequestsList({
             </>
           )}
 
-          <div className="flex flex-col gap-4 border-t border-slate-200/60 px-6 py-6 sm:flex-row sm:items-center sm:justify-between bg-white/50">
+          <div className="flex flex-col gap-3 border-t border-slate-200/60 px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-6 bg-white/50">
             <p className="text-base font-medium text-slate-600">
               หน้า {currentPage} จาก {totalPages}
             </p>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="h-12 rounded-xl border border-slate-300 bg-white px-4 text-base font-bold text-slate-700 shadow-sm transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:rounded-xl sm:px-4 sm:text-base"
               >
                 ก่อนหน้า
               </button>
@@ -651,7 +665,7 @@ export default function RequestsList({
                   type="button"
                   onClick={() => goToPage(page)}
                   aria-current={currentPage === page ? "page" : undefined}
-                  className={`h-12 min-w-[3rem] rounded-xl border px-3 text-base font-bold shadow-sm transition focus:outline-none focus:ring-4 focus:ring-teal-100 ${currentPage === page
+                  className={`h-10 min-w-[2.5rem] rounded-lg border px-2 text-sm font-bold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-teal-500/40 sm:h-12 sm:min-w-[3rem] sm:rounded-xl sm:px-3 sm:text-base ${currentPage === page
                     ? "border-teal-700 bg-teal-700 text-white"
                     : "border-slate-300 bg-white text-slate-700 hover:border-teal-600 hover:text-teal-700"
                     }`}
@@ -663,7 +677,7 @@ export default function RequestsList({
                 type="button"
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="h-12 rounded-xl border border-slate-300 bg-white px-4 text-base font-bold text-slate-700 shadow-sm transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:rounded-xl sm:px-4 sm:text-base"
               >
                 ถัดไป
               </button>

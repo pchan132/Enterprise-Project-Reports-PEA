@@ -10,8 +10,8 @@ export default async function Page({ params }: PageProps) {
   const { id } = await params;
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-4 text-slate-950 sm:px-6 sm:py-8 lg:px-8">
-      <div className="mx-auto w-full max-w-6xl">
+    <div className="flex flex-1 flex-col bg-slate-100 px-2 py-3 text-slate-950 sm:px-4 sm:py-6 lg:px-6">
+      <div className="w-full">
         <RequestForm mode="edit" requestId={id} />
       </div>
     </div>
