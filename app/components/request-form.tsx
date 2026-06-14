@@ -382,9 +382,9 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
   // --- Render ---------------------------------------------------------------
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:rounded-lg">
       {/* ── Header ── */}
-      <div className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6">
+      <div className="border-b border-slate-200 bg-white px-3 py-4 sm:px-6 sm:py-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-medium text-teal-700">ระบบรับคำร้อง</p>
@@ -407,7 +407,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
       </div>
 
       {/* ── Form ── */}
-      <form onSubmit={handleSubmit} className="space-y-6 px-4 py-5 sm:px-6">
+      <form onSubmit={handleSubmit} className="space-y-4 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-5">
         {/* Error banner */}
         {error && (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
@@ -771,7 +771,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
         </Section>
 
         {/* ── Sticky footer ── */}
-        <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="sticky bottom-0 -mx-3 border-t border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:-mx-6 sm:px-6 sm:py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="min-h-5 text-sm font-medium text-teal-700" aria-live="polite">
               {message}
@@ -782,7 +782,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
                   type="button"
                   disabled={loading || deleting}
                   onClick={handleDelete}
-                  className="h-12 w-full rounded-lg border border-rose-300 bg-white px-5 font-semibold text-rose-700 transition hover:border-rose-500 hover:bg-rose-50 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+                  className="h-11 w-full rounded-lg border border-rose-300 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:border-rose-500 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/40 disabled:cursor-wait disabled:opacity-60 sm:h-12 sm:w-auto sm:px-5 sm:text-base"
                 >
                   {deleting ? "กำลังลบ..." : "ลบคำร้อง"}
                 </button>
@@ -790,7 +790,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
               <button
                 type="submit"
                 disabled={loading || deleting}
-                className="h-12 w-full rounded-lg bg-teal-700 px-5 font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+                className="h-11 w-full rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500/40 disabled:cursor-wait disabled:opacity-60 sm:h-12 sm:w-auto sm:px-5 sm:text-base"
               >
                 {loading ? "กำลังบันทึก..." : isEdit ? "บันทึกการแก้ไข" : "บันทึกคำร้อง"}
               </button>

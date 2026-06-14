@@ -155,7 +155,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
     );
 
   return (
-    <div className="space-y-6 rounded-3xl border border-white/60 bg-white/50 p-6 shadow-sm backdrop-blur-md">
+    <div className="space-y-4 rounded-xl border border-white/60 bg-white/50 p-3 shadow-sm backdrop-blur-md sm:space-y-6 sm:rounded-3xl sm:p-6">
       {/* ค้นหาชื่อ-นามสกุล (Real Time) */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -312,7 +312,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
       </button>
 
       {showFilters && (
-        <form onSubmit={handleApplyFilters} className="space-y-4 border-t border-slate-200 pt-4">
+        <form onSubmit={handleApplyFilters} className="space-y-3 border-t border-slate-200 pt-3 sm:space-y-4 sm:pt-4">
           {/* Row 1: เบอร์โทร, สถานะ */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -545,10 +545,10 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
           </div>
 
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-6">
+          <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:gap-3 sm:pt-6">
             <button
               type="submit"
-              className="flex-1 rounded-2xl bg-gradient-to-r from-teal-500 to-teal-700 px-6 py-4 text-base font-bold text-white shadow-lg shadow-teal-900/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-900/30 focus:outline-none focus:ring-4 focus:ring-teal-100"
+              className="flex-1 rounded-xl bg-gradient-to-r from-teal-500 to-teal-700 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-teal-900/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-900/30 focus:outline-none focus:ring-2 focus:ring-teal-500/40 sm:rounded-2xl sm:px-6 sm:py-4 sm:text-base"
             >
               🔍 ค้นหา
             </button>
@@ -556,7 +556,7 @@ export default function RequestSearchForm({ onApplyFilters, onRealtimeSearch, on
               type="button"
               onClick={handleClearFilters}
               disabled={!hasActiveFilters}
-              className="flex-1 rounded-2xl border border-white bg-white/80 px-6 py-4 text-base font-bold text-slate-700 shadow-sm transition-all duration-300 hover:border-teal-300 hover:bg-white hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-xl border border-white bg-white/80 px-4 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all duration-300 hover:border-teal-300 hover:bg-white hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-2xl sm:px-6 sm:py-4 sm:text-base"
             >
               ❌ ล้างตัวกรอง
             </button>

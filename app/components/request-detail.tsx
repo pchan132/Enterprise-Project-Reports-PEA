@@ -140,8 +140,8 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
   const fullName = `${request.firstName} ${request.lastName}`;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <header className="border-b border-slate-200 px-4 py-5 sm:px-6">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:rounded-lg">
+      <header className="border-b border-slate-200 px-3 py-4 sm:px-6 sm:py-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-medium text-teal-700">
@@ -157,13 +157,13 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/requests"
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-100"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500/40 sm:h-11 sm:px-4"
             >
               กลับรายการ
             </Link>
             <Link
               href={`/requests/${request.id}/edit`}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-4 focus:ring-teal-100"
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-teal-700 px-3 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500/40 sm:h-11 sm:px-4"
             >
               แก้ไขข้อมูล
             </Link>
@@ -171,7 +171,7 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
         </div>
       </header>
 
-      <div className="space-y-7 px-4 py-5 sm:px-6">
+      <div className="space-y-5 px-3 py-4 sm:space-y-7 sm:px-6 sm:py-5">
         <section className="space-y-4">
           <h2 className="text-base font-semibold text-slate-950">ข้อมูลผู้ใช้ไฟ</h2>
           <DetailGrid
@@ -209,7 +209,7 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
               { label: "ขนาด/ตัวเลือกมิเตอร์", value: request.meterOption },
               { label: "หมายเลขผู้ใช้ไฟ", value: request.caRefNo },
               { label: "หมายเลขเครื่องวัด", value: request.peaNo },
-              { label: "วันที่จัดคิว", value: formatThaiDate(request.targetDate) },
+              { label: "แก้ไขล่าสุด", value: formatThaiDateTime(request.updatedAt) },
               { label: "ติดตาม/ทวงคำร้องแล้ว", value: request.isFollowUp },
               { label: "รายละเอียดเพิ่มเติม", value: request.description, wide: true },
             ]}
