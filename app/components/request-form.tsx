@@ -31,6 +31,7 @@ interface RequestFormData {
   lat: string;
   long: string;
   description: string;
+  link: string;
   requestDate: string;
   requestType: string[];
   meterOption: string;
@@ -80,6 +81,7 @@ const emptyFormData = (): RequestFormData => ({
   lat: "",
   long: "",
   description: "",
+  link: "",
   requestDate: getTodayInputValue(),
   requestType: [],
   meterOption: "",
@@ -104,6 +106,7 @@ function toFormData(request: ElectricalRequestDto): RequestFormData {
     lat: request.lat === null ? "" : String(request.lat),
     long: request.long === null ? "" : String(request.long),
     description: request.description ?? "",
+    link: request.link ?? "",
     requestDate: request.requestDate,
     requestType: request.requestType,
     meterOption: request.meterOption ?? "",
@@ -123,6 +126,7 @@ function compactPayload(formData: RequestFormData) {
     lat: formData.lat || null,
     long: formData.long || null,
     description: formData.description || null,
+    link: formData.link || null,
     meterOption: formData.meterOption || null,
     caRefNo: formData.caRefNo || null,
     peaNo: formData.peaNo || null,
@@ -756,6 +760,18 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
               ติดตาม/ทวงคำร้องแล้ว
             </label>
           </div>
+
+          <Field label="ลิงก์เอกสาร" htmlFor="link">
+            <input
+              id="link"
+              name="link"
+              type="url"
+              placeholder="https://example.com/document.pdf"
+              value={formData.link}
+              onChange={handleFieldChange}
+              className={fieldClass}
+            />
+          </Field>
 
           <Field label="รายละเอียดเพิ่มเติม" htmlFor="description">
             <textarea

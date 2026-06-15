@@ -28,6 +28,7 @@ export type ElectricalRequestDto = {
   lat: number | null;
   long: number | null;
   description: string | null;
+  link: string | null;
   requestDate: string;
   requestType: string[];
   meterOption: string | null;

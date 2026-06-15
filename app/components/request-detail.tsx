@@ -17,6 +17,7 @@ type DetailItem = {
   label: string;
   value: string | number | boolean | null | undefined;
   wide?: boolean;
+  href?: string;
 };
 
 function formatThaiDate(value: string | null | undefined) {
@@ -67,7 +68,21 @@ function DetailGrid({ items }: { items: DetailItem[] }) {
         >
           <dt className="text-sm font-medium text-slate-500">{item.label}</dt>
           <dd className="mt-1 text-wrap text-base font-semibold text-slate-950">
-            {displayValue(item.value)}
+            {item.href ? (
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-teal-700 underline underline-offset-2 transition hover:text-teal-900"
+              >
+                <span className="break-all">{displayValue(item.value)}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+                  <path fillRule="evenodd" d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Zm7.25-.75a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0V6.31l-5.47 5.47a.75.75 0 1 1-1.06-1.06l5.47-5.47H12.25a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+                </svg>
+              </a>
+            ) : (
+              displayValue(item.value)
+            )}
           </dd>
         </div>
       ))}
@@ -209,8 +224,10 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
               { label: "ขนาด/ตัวเลือกมิเตอร์", value: request.meterOption },
               { label: "หมายเลขผู้ใช้ไฟ", value: request.caRefNo },
               { label: "หมายเลขเครื่องวัด", value: request.peaNo },
+              { label: "วันที่จัดคิว", value: formatThaiDate(request.targetDate) },
               { label: "แก้ไขล่าสุด", value: formatThaiDateTime(request.updatedAt) },
               { label: "ติดตาม/ทวงคำร้องแล้ว", value: request.isFollowUp },
+              { label: "ลิงก์เอกสาร", value: request.link, href: request.link ?? undefined, wide: true },
               { label: "รายละเอียดเพิ่มเติม", value: request.description, wide: true },
             ]}
           />

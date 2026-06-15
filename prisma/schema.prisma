@@ -26,6 +26,7 @@ model ElectricalRequest {
   lat          Decimal? @db.Decimal(10, 7)
   long         Decimal? @db.Decimal(10, 7)
   description  String?  @db.Text
+  link         String?  @db.Text
   requestDate  DateTime @map("request_date") @db.Date
   requestType  String[] @map("request_type")
   meterOption  String?  @map("meter_option")
