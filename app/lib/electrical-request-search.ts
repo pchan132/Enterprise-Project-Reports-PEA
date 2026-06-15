@@ -12,6 +12,7 @@ const SEARCHABLE_STRING_FIELDS = [
   "district",
   "province",
   "description",
+  "link",
   "requestType",
   "meterOption",
   "caRefNo",
