@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { logout } from "@/app/actions/auth";
 
 type NavLink = {
@@ -17,7 +17,7 @@ const navLinks: NavLink[] = [
     href: "/",
     label: "หน้าแรก",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
         <polyline points="9 22 9 12 15 12 15 22" />
       </svg>
@@ -28,7 +28,7 @@ const navLinks: NavLink[] = [
     href: "/dashboard",
     label: "Dashboard",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect width="7" height="9" x="3" y="3" rx="1" />
         <rect width="7" height="5" x="14" y="3" rx="1" />
         <rect width="7" height="9" x="14" y="12" rx="1" />
@@ -41,7 +41,7 @@ const navLinks: NavLink[] = [
     href: "/requests",
     label: "รายการคำร้อง",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
         <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" />
         <path d="M12 11h4" /><path d="M12 16h4" />
@@ -54,7 +54,7 @@ const navLinks: NavLink[] = [
     href: "/requests/new",
     label: "เพิ่มคำร้อง",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12h14" />
         <path d="M12 5v14" />
       </svg>
@@ -63,9 +63,9 @@ const navLinks: NavLink[] = [
   },
   {
     href: "/logbook",
-    label: "📒 สมุดบันทึก",
+    label: "สมุดบันทึก",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
       </svg>
     ),
@@ -77,41 +77,17 @@ type SidebarProps = {
   username: string;
 };
 
-// ─── Mobile top bar (hamburger) ───
-function MobileHeader({ onToggle }: { onToggle: () => void }) {
-  return (
-    <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-slate-200/80 bg-white/90 px-3 backdrop-blur-lg lg:hidden">
-      <span className="text-base font-bold text-teal-700">⚡ PEA คำร้อง</span>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label="เปิดเมนู"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/40"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="4" x2="20" y1="12" y2="12" />
-          <line x1="4" x2="20" y1="6" y2="6" />
-          <line x1="4" x2="20" y1="18" y2="18" />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
-// ─── Sidebar content (shared by desktop & mobile drawer) ───
+// ─── Sidebar content (desktop only) ───
 function SidebarContent({
   username,
   pathname,
-  onNavigate,
 }: {
   username: string;
   pathname: string;
-  onNavigate?: () => void;
 }) {
   const router = useRouter();
 
   function handleBack() {
-    if (onNavigate) onNavigate();
     if (window.history.length > 1) {
       router.back();
     } else {
@@ -135,12 +111,10 @@ function SidebarContent({
         <ul className="flex flex-col gap-1">
           {navLinks.map((link) => {
             const active = link.isActive(pathname);
-
             return (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={`group flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-all duration-200 ${
                     active
@@ -206,39 +180,185 @@ function SidebarContent({
   );
 }
 
+// ─── Hamburger icon (animates to X when open) ───
+function HamburgerIcon({ open }: { open: boolean }) {
+  return (
+    <span className="relative flex h-5 w-5 flex-col items-center justify-center gap-[5px]">
+      <span
+        className={`block h-0.5 w-5 rounded-full bg-current transition-all duration-300 ${
+          open ? "translate-y-[7px] rotate-45" : ""
+        }`}
+      />
+      <span
+        className={`block h-0.5 w-5 rounded-full bg-current transition-all duration-300 ${
+          open ? "opacity-0 scale-x-0" : ""
+        }`}
+      />
+      <span
+        className={`block h-0.5 w-5 rounded-full bg-current transition-all duration-300 ${
+          open ? "-translate-y-[7px] -rotate-45" : ""
+        }`}
+      />
+    </span>
+  );
+}
+
+// ─── Mobile Top Bar with hamburger dropdown ───
+function MobileTopBar({
+  username,
+  pathname,
+}: {
+  username: string;
+  pathname: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // ปิดเมนูเมื่อเปลี่ยนหน้า
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // ปิดเมื่อกดนอก dropdown
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  // Lock scroll เมื่อเปิดเมนู
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [open]);
+
+  const close = useCallback(() => setOpen(false), []);
+
+  return (
+    // ใช้ div ธรรมดา (ไม่ใช่ sticky ที่นี่) — layout ของ parent เป็น flex-col
+    // header ด้านในจึง sticky ตาม scroll ได้เอง
+    <div className="lg:hidden" ref={menuRef}>
+      {/* ── Sticky top bar ── */}
+      <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 shadow-sm backdrop-blur-lg lg:hidden">
+        {/* Brand */}
+        <span className="flex items-center gap-2 text-sm font-bold text-teal-700">
+          <span className="text-lg">⚡</span>
+          PEA คำร้อง
+        </span>
+
+        {/* Right side: username chip + hamburger */}
+        <div className="flex items-center gap-2">
+          {/* Username chip */}
+          <div className="flex items-center gap-1.5 rounded-full bg-teal-50 px-2.5 py-1">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-teal-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <span className="max-w-[80px] truncate text-xs font-semibold text-teal-700">{username}</span>
+          </div>
+
+          {/* Hamburger button */}
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "ปิดเมนู" : "เปิดเมนู"}
+            aria-expanded={open}
+            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500/40 ${
+              open
+                ? "bg-teal-700 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <HamburgerIcon open={open} />
+          </button>
+        </div>
+      </header>
+
+      {/* ── Backdrop (covers full screen below top bar) ── */}
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm"
+          style={{ top: "3.5rem" }}
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Dropdown menu (anchored to sticky header via fixed positioning) ── */}
+      <div
+        className={`fixed left-0 right-0 z-40 px-2 pt-1 transition-all duration-200 ${
+          open
+            ? "pointer-events-auto opacity-100 translate-y-0"
+            : "pointer-events-none opacity-0 -translate-y-2"
+        }`}
+        style={{ top: "3.5rem" }}
+      >
+        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-slate-900/15">
+          {/* Nav links */}
+          <nav className="p-2">
+            <ul className="flex flex-col gap-0.5">
+              {navLinks.map((link) => {
+                const active = link.isActive(pathname);
+                return (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      onClick={close}
+                      aria-current={active ? "page" : undefined}
+                      className={`group flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-all duration-150 ${
+                        active
+                          ? "bg-teal-700 text-white shadow-sm"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-teal-700"
+                      }`}
+                    >
+                      <span className={`shrink-0 ${active ? "text-white/90" : "text-slate-400 group-hover:text-teal-600"}`}>
+                        {link.icon}
+                      </span>
+                      {link.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          {/* Divider */}
+          <div className="mx-3 border-t border-slate-100" />
+
+          {/* Logout */}
+          <div className="p-2">
+            <form action={logout}>
+              <button
+                type="submit"
+                className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-rose-400">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" x2="9" y1="12" y2="12" />
+                </svg>
+                ออกจากระบบ
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main export ───
 export default function Sidebar({ username }: SidebarProps) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
-
-  // ปิด drawer เมื่อเปลี่ยนหน้า
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  // ปิด drawer เมื่อ resize ไป desktop
-  useEffect(() => {
-    function handleResize() {
-      if (window.innerWidth >= 1024) {
-        setMobileOpen(false);
-      }
-    }
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Lock body scroll เมื่อ drawer เปิด
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
-    }
-  }, [mobileOpen]);
-
-  const closeMobile = useCallback(() => setMobileOpen(false), []);
 
   return (
     <>
@@ -247,44 +367,8 @@ export default function Sidebar({ username }: SidebarProps) {
         <SidebarContent username={username} pathname={pathname} />
       </aside>
 
-      {/* ── Mobile header bar ── */}
-      <MobileHeader onToggle={() => setMobileOpen(true)} />
-
-      {/* ── Mobile drawer overlay ── */}
-      {mobileOpen && (
-        <div
-          ref={overlayRef}
-          className="fixed inset-0 z-50 lg:hidden"
-          onClick={(e) => {
-            if (e.target === overlayRef.current) closeMobile();
-          }}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-
-          {/* Drawer */}
-          <aside className="relative h-full w-72 max-w-[85vw] bg-white shadow-2xl shadow-slate-900/20 animate-slide-in">
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={closeMobile}
-              aria-label="ปิดเมนู"
-              className="absolute right-3 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
-            </button>
-
-            <SidebarContent
-              username={username}
-              pathname={pathname}
-              onNavigate={closeMobile}
-            />
-          </aside>
-        </div>
-      )}
+      {/* ── Mobile top bar + hamburger dropdown ── */}
+      <MobileTopBar username={username} pathname={pathname} />
     </>
   );
 }
