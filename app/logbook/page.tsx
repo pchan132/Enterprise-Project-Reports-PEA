@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -363,7 +364,12 @@ export default function LogbookPage() {
 
                         {/* ชื่อ-นามสกุล */}
                         <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
-                          {req.firstName} {req.lastName}
+                          <Link
+                            href={`/requests/${req.id}`}
+                            className="text-teal-700 underline decoration-teal-300/0 underline-offset-2 transition-all duration-200 hover:text-teal-900 hover:decoration-teal-400 print:text-slate-900 print:no-underline"
+                          >
+                            {req.firstName} {req.lastName}
+                          </Link>
                         </td>
 
                         {/* ประเภท */}
