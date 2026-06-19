@@ -23,8 +23,8 @@ model ElectricalRequest {
   subDistrict  String   @map("sub_district")
   district     String
   province     String   @default("ลพบุรี")
-  lat          Decimal? @db.Decimal(10, 7)
-  long         Decimal? @db.Decimal(10, 7)
+  lat          Decimal? @db.Decimal(12, 8)
+  long         Decimal? @db.Decimal(12, 8)
   description  String?  @db.Text
   link         String?  @db.Text
   requestDate  DateTime @map("request_date") @db.Date

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import WMSF01PrintForm from "@/app/components/wmsf01-print-form";
 
 import type {
   ApiErrorResponse,
@@ -94,6 +95,7 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
   const [request, setRequest] = useState<ElectricalRequestDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showPrintForm, setShowPrintForm] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -170,6 +172,16 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowPrintForm(true)}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 text-sm font-semibold text-amber-800 transition hover:border-amber-500 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400/40 sm:h-11 sm:px-4"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path fillRule="evenodd" d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.212 2.212 0 0 1 18 8.653v4.097A2.25 2.25 0 0 1 15.75 15h-.75v.75c0 .966-.784 1.75-1.75 1.75h-6.5A1.75 1.75 0 0 1 5 15.75V15h-.75A2.25 2.25 0 0 1 2 12.75V8.653c0-1.082.775-2.034 1.874-2.198.374-.056.75-.107 1.126-.153V2.75ZM6.5 15v.75c0 .138.112.25.25.25h6.5a.25.25 0 0 0 .25-.25V15h-7Zm7-11.25v3.372a40.739 40.739 0 0 0-7 0V3.75h-.002V2.75a.25.25 0 0 1 .25-.25h6.5a.25.25 0 0 1 .25.25v1Zm.497 6a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+              </svg>
+              พิมพ์ฟอร์ม WMSF01
+            </button>
             <Link
               href="/requests"
               className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500/40 sm:h-11 sm:px-4"
@@ -244,6 +256,14 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
           />
         </section>
       </div>
+
+      {/* ── WMSF01 Print Form Modal ── */}
+      {showPrintForm && (
+        <WMSF01PrintForm
+          request={request}
+          onClose={() => setShowPrintForm(false)}
+        />
+      )}
     </div>
   );
 }
