@@ -5,17 +5,24 @@ type LineNotifyRequest = Pick<
   | "id"
   | "requestNo"
   | "requestType"
+  | "meterOption"
+  | "peaNo"
+  | "caRefNo"
   | "firstName"
   | "lastName"
   | "subDistrict"
   | "district"
   | "phone"
+  | "phone2"
   | "status"
   | "description"
   | "lat"
   | "long"
   | "requestDate"
+  | "link"
 >;
+
+type LineNotifyMode = "new" | "update";
 
 /**
  * Format a Date as a Thai-locale date string (e.g. "21 มิ.ย. 2569").
@@ -37,22 +44,48 @@ function formatThaiDate(date: Date | string): string {
 /**
  * Build a human-readable LINE message from an electrical request record.
  */
-function buildLineMessage(request: LineNotifyRequest): string {
+function buildLineMessage(
+  request: LineNotifyRequest,
+  mode: LineNotifyMode,
+): string {
   const ref = request.requestNo ?? request.id.slice(0, 8);
   const requestType = Array.isArray(request.requestType)
     ? request.requestType.join(", ")
     : String(request.requestType);
 
+  const header =
+    mode === "update"
+      ? "🔄 อัพเดทข้อมูลคำร้อง"
+      : "🔔 มีคำร้องใหม่เข้าสู่ระบบ";
+
   const lines: string[] = [
-    "🔔 มีคำร้องใหม่เข้าสู่ระบบ",
+    header,
     `📅 วันที่: ${formatThaiDate(request.requestDate)}`,
     "━━━━━━━━━━━━━━━━━",
     `📋 รหัส: ${ref}`,
-    `📝 ประเภท: ${requestType}`,
     `👤 ผู้ขอ: ${request.firstName} ${request.lastName}`,
+    `📝 ประเภท: ${requestType}`,
+  ];
+
+  if (request.meterOption) {
+    lines.push(`🔌 ขนาดมิเตอร์: ${request.meterOption}`);
+  }
+  if (request.peaNo) {
+    lines.push(`⚡ PEA No: ${request.peaNo}`);
+  }
+  if (request.caRefNo) {
+    lines.push(`🔢 CA Ref No: ${request.caRefNo}`);
+  }
+
+  lines.push(
+    "━━━━━━━━━━━━━━━━━",
     `📍 พื้นที่: ต.${request.subDistrict} อ.${request.district}`,
     `📞 เบอร์โทร: ${request.phone}`,
-  ];
+  );
+
+  if (request.phone2) {
+    lines.push(`📞 เบอร์โทรสำรอง: ${request.phone2}`);
+  }
 
   // Include Google Maps link only when coordinates are available
   if (request.lat != null && request.long != null) {
@@ -66,7 +99,13 @@ function buildLineMessage(request: LineNotifyRequest): string {
     lines.push(`📝 รายละเอียด: ${request.description}`);
   }
 
+  // Include document link if present
+  if (request.link) {
+    lines.push(`📎 ลิงก์เอกสาร: ${request.link}`);
+  }
+
   lines.push(
+    "━━━━━━━━━━━━━━━━━",
     `🏷️ สถานะ: ${request.status}`,
     "━━━━━━━━━━━━━━━━━",
     "⚡ กฟภ. ระบบจัดการคำร้องไฟฟ้า",
@@ -81,6 +120,7 @@ function buildLineMessage(request: LineNotifyRequest): string {
  */
 export async function sendLineNotification(
   request: LineNotifyRequest,
+  mode: LineNotifyMode = "new",
 ): Promise<{ success: boolean; message: string }> {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   const groupId = process.env.LINE_GROUP_ID;
@@ -100,7 +140,7 @@ export async function sendLineNotification(
     messages: [
       {
         type: "text",
-        text: buildLineMessage(request),
+        text: buildLineMessage(request, mode),
       },
     ],
   };
@@ -130,11 +170,15 @@ export async function sendLineNotification(
 
 /**
  * Fire-and-forget LINE notification.
- * Logs errors but never throws — safe to call in the POST handler
+ * Logs errors but never throws — safe to call in the POST/PUT handler
  * without blocking the HTTP response.
  */
-export function sendLineNotificationAsync(request: LineNotifyRequest): void {
-  sendLineNotification(request).catch((error) => {
+export function sendLineNotificationAsync(
+  request: LineNotifyRequest,
+  mode: LineNotifyMode = "new",
+): void {
+  sendLineNotification(request, mode).catch((error) => {
     console.error("[LINE Notify] Async notification failed:", error);
   });
 }
+
