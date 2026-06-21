@@ -10,6 +10,7 @@ import {
   parseSearchKeyword,
   searchElectricalRequests,
 } from "@/app/lib/electrical-request-search";
+import { sendLineNotificationAsync } from "@/app/lib/line-notify";
 import { prisma } from "@/app/lib/prisma";
 import type { NextRequest } from "next/server";
 
@@ -96,6 +97,9 @@ export async function POST(request: Request) {
     };
 
     const created = await prisma.electricalRequest.create({ data });
+
+    // Fire-and-forget LINE push notification
+    sendLineNotificationAsync(created);
 
     return Response.json(
       { data: serializeElectricalRequest(created) },

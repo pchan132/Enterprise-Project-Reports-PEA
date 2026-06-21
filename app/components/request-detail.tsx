@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import SendToLineButton from "@/app/components/send-to-line-button";
 import WMSF01PrintForm from "@/app/components/wmsf01-print-form";
 
 import type {
@@ -229,6 +230,7 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
               </svg>
               พิมพ์ฟอร์ม / PDF (แบบใหม่ jsPDF)
             </button>
+            <SendToLineButton requestId={request.id} />
             <Link
               href="/requests"
               className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500/40 sm:h-11 sm:px-4"
