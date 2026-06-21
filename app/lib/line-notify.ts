@@ -61,7 +61,7 @@ function buildLineMessage(
 
   const lines: string[] = [
     header,
-    `📅 วันที่: ${formatThaiDate(request.requestDate)}`,
+    `📅 วันที่เขียนคำร้อง: ${formatThaiDate(request.requestDate)}`,
     `📅 วันที่อัพเดท: ${formatThaiDate(request.updatedAt)}`,
     `📋 รหัส: ${ref}`,
     "",
@@ -98,11 +98,13 @@ function buildLineMessage(
   // Include description if present
   if (request.description) {
     lines.push(`📝 รายละเอียด: ${request.description}`);
+    lines.push("");
   }
 
   // Include document link if present
   if (request.link) {
     lines.push(`📎 ลิงก์เอกสาร: ${request.link}`);
+    lines.push("");
   }
 
   lines.push(
