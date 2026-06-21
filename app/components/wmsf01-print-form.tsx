@@ -118,13 +118,12 @@ export default function WMSF01PrintForm({
     if (!printAreaRef.current) return;
     setSavingPdf(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
+      const { toCanvas } = await import("html-to-image");
       const { jsPDF } = await import("jspdf");
 
       // ถ่ายภาพจาก DOM โดยตรง จะได้ฟอนต์ภาษาไทยและรูปแบบเหมือนที่เห็น 100%
-      const canvas = await html2canvas(printAreaRef.current, {
-        scale: 2, // เพิ่มความละเอียดภาพ
-        useCORS: true,
+      const canvas = await toCanvas(printAreaRef.current, {
+        pixelRatio: 2, // เพิ่มความละเอียดภาพ
       });
 
       const imgData = canvas.toDataURL("image/png");
