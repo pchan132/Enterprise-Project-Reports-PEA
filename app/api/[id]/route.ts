@@ -4,6 +4,7 @@ import {
   parseUpdateElectricalRequest,
   serializeElectricalRequest,
 } from "@/app/lib/electrical-requests-api";
+import { sendLineNotificationAsync } from "@/app/lib/line-notify";
 import { prisma } from "@/app/lib/prisma";
 
 export const runtime = "nodejs";
@@ -69,6 +70,9 @@ export async function PUT(request: Request, { params }: RouteParams) {
       },
       data: result.data,
     });
+
+    // Fire-and-forget LINE push notification (update mode)
+    sendLineNotificationAsync(updated, "update");
 
     return Response.json({
       data: serializeElectricalRequest(updated),
