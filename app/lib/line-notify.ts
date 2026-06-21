@@ -19,6 +19,7 @@ type LineNotifyRequest = Pick<
   | "lat"
   | "long"
   | "requestDate"
+  | "updatedAt"
   | "link"
 >;
 
@@ -61,12 +62,22 @@ function buildLineMessage(
   const lines: string[] = [
     header,
     `📅 วันที่: ${formatThaiDate(request.requestDate)}`,
-    "━━━━━━━━━━━━━━━━━",
+    `📅 วันที่อัพเดท: ${formatThaiDate(request.updatedAt)}`,
     `📋 รหัส: ${ref}`,
+    "",
+    `🏷️ สถานะ: ${request.status}`,
+    "",
     `👤 ผู้ขอ: ${request.firstName} ${request.lastName}`,
-    `📝 ประเภท: ${requestType}`,
+    `📞 เบอร์โทร: ${request.phone}`,
+    `📍 พื้นที่: ต.${request.subDistrict} อ.${request.district}`,
+    "",
   ];
-
+  // Add meter, PEA No, CA Ref No, and Link
+  if (request.phone2) {
+    lines.push(`📞 เบอร์โทรสำรอง: ${request.phone2}`);
+  }
+  lines.push("");
+  lines.push(`📝 ประเภท: ${requestType}`);
   if (request.meterOption) {
     lines.push(`🔌 ขนาดมิเตอร์: ${request.meterOption}`);
   }
@@ -75,16 +86,6 @@ function buildLineMessage(
   }
   if (request.caRefNo) {
     lines.push(`🔢 CA Ref No: ${request.caRefNo}`);
-  }
-
-  lines.push(
-    "━━━━━━━━━━━━━━━━━",
-    `📍 พื้นที่: ต.${request.subDistrict} อ.${request.district}`,
-    `📞 เบอร์โทร: ${request.phone}`,
-  );
-
-  if (request.phone2) {
-    lines.push(`📞 เบอร์โทรสำรอง: ${request.phone2}`);
   }
 
   // Include Google Maps link only when coordinates are available
@@ -105,9 +106,6 @@ function buildLineMessage(
   }
 
   lines.push(
-    "━━━━━━━━━━━━━━━━━",
-    `🏷️ สถานะ: ${request.status}`,
-    "━━━━━━━━━━━━━━━━━",
     "⚡ กฟภ. ระบบจัดการคำร้องไฟฟ้า",
   );
 
