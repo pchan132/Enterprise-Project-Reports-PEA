@@ -1,8 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { ElectricalRequestDto } from "@/app/lib/electrical-request-types";
-import { request } from "http";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,8 +54,104 @@ export default function WMSF01PrintForm({
       : request.requestType ?? ""
     : "";
 
+  const [savingPdf, setSavingPdf] = useState(false);
+
   function handlePrint() {
-    window.print();
+    const printArea = printAreaRef.current;
+    if (!printArea) return;
+
+    // รวบรวม <link rel="stylesheet"> จากหน้าปัจจุบัน
+    const linkTags = Array.from(
+      document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')
+    )
+      .map((l) => `<link rel="stylesheet" href="${l.href}" />`)
+      .join("\n");
+
+    // รวบรวม <style> inline จากหน้าปัจจุบัน (Next.js inject ไว้)
+    const styleTags = Array.from(document.querySelectorAll("style"))
+      .map((s) => `<style>${s.innerHTML}</style>`)
+      .join("\n");
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WMSF01 Preview</title>
+  ${linkTags}
+  ${styleTags}
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #f1f5f9;
+      font-family: 'TH Sarabun New', 'Sarabun', 'Tahoma', sans-serif;
+    }
+    @media print {
+      body { background: white; padding: 0; }
+      .print-hide { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  ${printArea.outerHTML}
+</body>
+</html>`;
+
+    const popup = window.open("", "_blank", "width=900,height=1050,scrollbars=yes,resizable=yes");
+    if (!popup) {
+      // fallback: print หน้าปัจจุบันถ้า popup ถูกบล็อก
+      window.print();
+      return;
+    }
+    popup.document.open();
+    popup.document.write(htmlContent);
+    popup.document.close();
+    popup.focus();
+    // รอ CSS โหลดแล้วค่อยเปิด print dialog
+    popup.addEventListener("load", () => {
+      setTimeout(() => popup.print(), 300);
+    });
+  }
+
+  async function handleSavePdf() {
+    if (!printAreaRef.current) return;
+    setSavingPdf(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      // ถ่ายภาพจาก DOM โดยตรง จะได้ฟอนต์ภาษาไทยและรูปแบบเหมือนที่เห็น 100%
+      const canvas = await html2canvas(printAreaRef.current, {
+        scale: 2, // เพิ่มความละเอียดภาพ
+        useCORS: true,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      const filename = request?.requestNo
+        ? `WMSF01-${request.requestNo}.pdf`
+        : request?.id
+          ? `WMSF01-${request.id.slice(0, 8)}.pdf`
+          : "WMSF01.pdf";
+          
+      pdf.save(filename);
+    } catch (err) {
+      console.error("PDF generation failed", err);
+      alert("ไม่สามารถสร้าง PDF ได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSavingPdf(false);
+    }
   }
 
   // ── Section 1 items ──
@@ -123,25 +218,44 @@ export default function WMSF01PrintForm({
       <div className="fixed inset-0 z-[9999] overflow-auto">
         {/* ── Action bar (hidden on print) ── */}
         <div className="print-hide sticky top-0 z-10 flex items-center justify-center gap-3 bg-slate-900/90 px-4 py-3 backdrop-blur">
+          {/* ── Print button ── */}
           <button
             type="button"
             onClick={handlePrint}
             className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-4 w-4"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.212 2.212 0 0 1 18 8.653v4.097A2.25 2.25 0 0 1 15.75 15h-.75v.75c0 .966-.784 1.75-1.75 1.75h-6.5A1.75 1.75 0 0 1 5 15.75V15h-.75A2.25 2.25 0 0 1 2 12.75V8.653c0-1.082.775-2.034 1.874-2.198.374-.056.75-.107 1.126-.153V2.75ZM6.5 15v.75c0 .138.112.25.25.25h6.5a.25.25 0 0 0 .25-.25V15h-7Zm7-11.25v3.372a40.739 40.739 0 0 0-7 0V3.75h-.002V2.75a.25.25 0 0 1 .25-.25h6.5a.25.25 0 0 1 .25.25v1Zm.497 6a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1-.75-.75Z"
-                clipRule="evenodd"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path fillRule="evenodd" d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.212 2.212 0 0 1 18 8.653v4.097A2.25 2.25 0 0 1 15.75 15h-.75v.75c0 .966-.784 1.75-1.75 1.75h-6.5A1.75 1.75 0 0 1 5 15.75V15h-.75A2.25 2.25 0 0 1 2 12.75V8.653c0-1.082.775-2.034 1.874-2.198.374-.056.75-.107 1.126-.153V2.75ZM6.5 15v.75c0 .138.112.25.25.25h6.5a.25.25 0 0 0 .25-.25V15h-7Zm7-11.25v3.372a40.739 40.739 0 0 0-7 0V3.75h-.002V2.75a.25.25 0 0 1 .25-.25h6.5a.25.25 0 0 1 .25.25v1Zm.497 6a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
             </svg>
             พิมพ์ฟอร์ม / Print
           </button>
+
+          {/* ── Save PDF button ── */}
+          <button
+            type="button"
+            onClick={handleSavePdf}
+            disabled={savingPdf}
+            className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-400/50 disabled:cursor-wait disabled:opacity-60"
+          >
+            {savingPdf ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                กำลังสร้าง PDF...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" />
+                  <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
+                </svg>
+                บันทึก PDF
+              </>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={onClose}
@@ -216,6 +330,8 @@ export default function WMSF01PrintForm({
                     {requestTypes}
                   </span>
                 </div> */}
+              </div>
+              <div className="flex flex-wrap"> 
                 <span className="shrink-0">ที่อยู่</span>
                 <span className="text-lg flex-1 border-b border-dotted border-black min-h-[1.2em] px-1 font-bold">
                   {request
@@ -223,6 +339,7 @@ export default function WMSF01PrintForm({
                     : ""}
                 </span>
               </div>
+              
 
               {/* Row 4: Address */}
               {/* <div className="flex items-end gap-1"> */}
