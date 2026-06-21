@@ -345,7 +345,9 @@ function parseDecimalValue(value: unknown) {
         ? Number(value)
         : Number.NaN;
 
-  return Number.isFinite(numberValue) ? numberValue : undefined;
+  return Number.isFinite(numberValue)
+    ? Math.round(numberValue * 1e8) / 1e8  // round to 8 decimal places → matches Decimal(12,8)
+    : undefined;
 }
 
 function parseBooleanValue(value: unknown) {

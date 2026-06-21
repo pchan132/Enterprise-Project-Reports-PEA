@@ -31,12 +31,22 @@ html, body {
 }
 
 
+/* ─── Hide element on print ─── */
+.print-hide {
+  /* visible on screen */
+}
+
 /* ─── Print-friendly styles ─── */
 @media print {
   body {
     background: white !important;
     color: black !important;
     font-size: 11pt;
+  }
+
+  /* Hide everything marked with print-hide */
+  .print-hide {
+    display: none !important;
   }
 
   /* Hide sidebar, nav, buttons, and interactive elements */
@@ -62,9 +72,62 @@ html, body {
     page-break-inside: avoid;
   }
 
-  /* Shrink page margins for more table space */
+  /* Default: landscape for list/tables */
   @page {
     margin: 1.5cm;
     size: A4 landscape;
+  }
+}
+
+/* ─── WMSF01 A4 Portrait Print ─── */
+@media print {
+  /* When WMSF01 is present, override to portrait */
+  body:has(#wmsf01-print-area) {
+    @page {
+      size: A4 portrait;
+      margin: 8mm;
+    }
+  }
+
+  /* Show only the printable form */
+  #wmsf01-print-area {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    padding: 8mm !important;
+    margin: 0 !important;
+    z-index: 99999 !important;
+    font-size: 10pt !important;
+  }
+
+  /* Hide everything else when WMSF01 form is present */
+  body:has(#wmsf01-print-area) aside,
+  body:has(#wmsf01-print-area) nav,
+  body:has(#wmsf01-print-area) header,
+  body:has(#wmsf01-print-area) .sticky,
+  body:has(#wmsf01-print-area) main {
+    display: none !important;
+  }
+
+  /* Keep the form's fixed container visible */
+  body:has(#wmsf01-print-area) > div {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Table borders must be crisp black */
+  #wmsf01-print-area table {
+    border-collapse: collapse !important;
+  }
+  #wmsf01-print-area th,
+  #wmsf01-print-area td {
+    border: 1px solid black !important;
+    padding: 2px 4px !important;
+  }
+  #wmsf01-print-area th {
+    background: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
