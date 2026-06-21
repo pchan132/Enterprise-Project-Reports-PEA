@@ -583,8 +583,8 @@ function SLAAlertCard({
   const textMuted = isRed ? "text-red-300" : "text-orange-300";
   const ringColor = isRed ? "ring-red-400/30" : "ring-orange-400/30";
 
-  // Show up to 3 most overdue
-  const topItems = items.slice(0, 3);
+  // Show up to 6 most overdue
+  const topItems = items.slice(0, 6);
 
   return (
     <div
@@ -779,7 +779,9 @@ function PendingPaymentTable({ items }: { items: PendingPaymentItem[] }) {
                       </span>
                     </td>
                     <td className="px-2 py-2.5 font-medium text-slate-800">
+                      <Link href={`/requests/${item.id}`}>
                       {item.firstName} {item.lastName}
+                      </Link>
                     </td>
                     <td className="px-2 py-2.5">
                       <a

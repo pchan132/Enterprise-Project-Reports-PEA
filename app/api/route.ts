@@ -76,7 +76,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const { searchParams } = request.nextUrl;
+  const notifyLine = searchParams.get("notifyLine") !== "false";
+
   const bodyResult = await readJsonBody(request);
 
   if (bodyResult instanceof Response) {
@@ -98,8 +101,10 @@ export async function POST(request: Request) {
 
     const created = await prisma.electricalRequest.create({ data });
 
-    // Fire-and-forget LINE push notification
-    sendLineNotificationAsync(created);
+    // Fire-and-forget LINE push notification (if opted in)
+    if (notifyLine) {
+      sendLineNotificationAsync(created);
+    }
 
     return Response.json(
       { data: serializeElectricalRequest(created) },

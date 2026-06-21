@@ -6,6 +6,7 @@ import {
 } from "@/app/lib/electrical-requests-api";
 import { sendLineNotificationAsync } from "@/app/lib/line-notify";
 import { prisma } from "@/app/lib/prisma";
+import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 
@@ -40,8 +41,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
   }
 }
 
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  const { searchParams } = request.nextUrl;
+  const notifyLine = searchParams.get("notifyLine") !== "false";
+
   const bodyResult = await readJsonBody(request);
 
   if (bodyResult instanceof Response) {
@@ -71,8 +75,10 @@ export async function PUT(request: Request, { params }: RouteParams) {
       data: result.data,
     });
 
-    // Fire-and-forget LINE push notification (update mode)
-    sendLineNotificationAsync(updated, "update");
+    // Fire-and-forget LINE push notification (update mode, if opted in)
+    if (notifyLine) {
+      sendLineNotificationAsync(updated, "update");
+    }
 
     return Response.json({
       data: serializeElectricalRequest(updated),

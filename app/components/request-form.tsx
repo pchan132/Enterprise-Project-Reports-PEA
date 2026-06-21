@@ -208,6 +208,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
   const [initialLoading, setInitialLoading] = useState(isEdit);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [sendLineNotify, setSendLineNotify] = useState(true);
   const [formData, setFormData] = useState<RequestFormData>(() => emptyFormData());
   const [showPrintForm, setShowPrintForm] = useState(false);
 
@@ -322,7 +323,8 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
     clearMessages();
 
     try {
-      const url = isEdit ? `/api/${encodeURIComponent(requestId ?? "")}` : "/api";
+      const urlBase = isEdit ? `/api/${encodeURIComponent(requestId ?? "")}` : "/api";
+      const url = `${urlBase}?notifyLine=${sendLineNotify}`;
       const method = isEdit ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -806,7 +808,16 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
             <p className="min-h-5 text-sm font-medium text-teal-700" aria-live="polite">
               {message}
             </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 hover:text-slate-900">
+                <input
+                  type="checkbox"
+                  checked={sendLineNotify}
+                  onChange={(e) => setSendLineNotify(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-600"
+                />
+                ส่งแจ้งเตือนเข้า LINE
+              </label>
               {isEdit && (
                 <button
                   type="button"
