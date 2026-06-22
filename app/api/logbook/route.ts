@@ -1,5 +1,6 @@
 import { prisma } from "@/app/lib/prisma";
 import { serializeElectricalRequest } from "@/app/lib/electrical-requests-api";
+import { requireApiAuth } from "@/app/lib/api-auth";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
@@ -17,6 +18,10 @@ export const runtime = "nodejs";
  * }
  */
 export async function GET(request: NextRequest) {
+  // 🛡️ Auth guard (defense-in-depth)
+  const auth = await requireApiAuth();
+  if (!auth.authenticated) return auth.response;
+
   const { searchParams } = request.nextUrl;
   const dateParam = searchParams.get("date")?.trim();
 

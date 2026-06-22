@@ -201,7 +201,7 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button
+            {/* <button
               type="button"
               onClick={handleDownloadReactPdf}
               disabled={downloadingOld}
@@ -219,7 +219,7 @@ export default function RequestDetail({ requestId }: RequestDetailProps) {
                 </svg>
               )}
               ดาวน์โหลด PDF (ระบบเดิม React-PDF)
-            </button>
+            </button> */}
             <button
               type="button"
               onClick={() => setShowPrintForm(true)}

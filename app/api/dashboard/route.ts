@@ -1,5 +1,6 @@
 import { prisma } from "@/app/lib/prisma";
 import { REQUEST_TYPES } from "@/app/lib/data/request-types";
+import { requireApiAuth } from "@/app/lib/api-auth";
 
 export const runtime = "nodejs";
 
@@ -50,6 +51,10 @@ function daysAgo(days: number): Date {
  * }
  */
 export async function GET() {
+  // 🛡️ Auth guard (defense-in-depth)
+  const auth = await requireApiAuth();
+  if (!auth.authenticated) return auth.response;
+
   try {
     const now = new Date();
     const threshold = daysAgo(SLA_OVERDUE_DAYS);
