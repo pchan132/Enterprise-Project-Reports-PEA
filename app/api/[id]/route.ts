@@ -6,6 +6,8 @@ import {
 } from "@/app/lib/electrical-requests-api";
 import { sendLineNotificationAsync } from "@/app/lib/line-notify";
 import { prisma } from "@/app/lib/prisma";
+import { requireApiAuth } from "@/app/lib/api-auth";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/app/lib/rate-limiter";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
@@ -17,6 +19,10 @@ type RouteParams = {
 };
 
 export async function GET(_request: Request, { params }: RouteParams) {
+  // 🛡️ Auth guard (defense-in-depth)
+  const auth = await requireApiAuth();
+  if (!auth.authenticated) return auth.response;
+
   const { id } = await params;
 
   try {
@@ -42,6 +48,15 @@ export async function GET(_request: Request, { params }: RouteParams) {
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  // 🛡️ Auth guard (defense-in-depth)
+  const auth = await requireApiAuth();
+  if (!auth.authenticated) return auth.response;
+
+  // 🛡️ Rate limiting for write operations
+  const clientIp = getClientIp(request);
+  const rateCheck = checkRateLimit("apiWrite", clientIp);
+  if (!rateCheck.allowed) return rateLimitResponse(rateCheck.retryAfterSeconds!);
+
   const { id } = await params;
   const { searchParams } = request.nextUrl;
   const notifyLine = searchParams.get("notifyLine") !== "false";
@@ -99,7 +114,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(_request: Request, { params }: RouteParams) {
+export async function DELETE(request: Request, { params }: RouteParams) {
+  // 🛡️ Auth guard (defense-in-depth)
+  const auth = await requireApiAuth();
+  if (!auth.authenticated) return auth.response;
+
+  // 🛡️ Rate limiting for write operations
+  const clientIp = getClientIp(request);
+  const rateCheck = checkRateLimit("apiWrite", clientIp);
+  if (!rateCheck.allowed) return rateLimitResponse(rateCheck.retryAfterSeconds!);
+
   const { id } = await params;
 
   try {

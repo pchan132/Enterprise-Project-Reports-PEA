@@ -12,11 +12,17 @@ import {
 } from "@/app/lib/electrical-request-search";
 import { sendLineNotificationAsync } from "@/app/lib/line-notify";
 import { prisma } from "@/app/lib/prisma";
+import { requireApiAuth } from "@/app/lib/api-auth";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/app/lib/rate-limiter";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
+  // 🛡️ Auth guard (defense-in-depth)
+  const auth = await requireApiAuth();
+  if (!auth.authenticated) return auth.response;
+
   const { searchParams } = request.nextUrl;
   const { page, pageSize, skip } = parsePagination(searchParams);
   const where = buildElectricalRequestBaseWhere(searchParams);
@@ -77,6 +83,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // 🛡️ Auth guard (defense-in-depth)
+  const auth = await requireApiAuth();
+  if (!auth.authenticated) return auth.response;
+
+  // 🛡️ Rate limiting for write operations
+  const clientIp = getClientIp(request);
+  const rateCheck = checkRateLimit("apiWrite", clientIp);
+  if (!rateCheck.allowed) return rateLimitResponse(rateCheck.retryAfterSeconds!);
+
   const { searchParams } = request.nextUrl;
   const notifyLine = searchParams.get("notifyLine") !== "false";
 

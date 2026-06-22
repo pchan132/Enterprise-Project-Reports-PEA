@@ -1,4 +1,5 @@
 import type { ElectricalRequest, Prisma } from "@/app/generated/prisma/client";
+import { sanitizeRequestBody, isValidPhone, sanitizeUrl } from "@/app/lib/sanitize";
 
 type RequestBody = Record<string, unknown>;
 
@@ -121,6 +122,24 @@ export function parseCreateElectricalRequest(
     errors.push("requestDate is required");
   }
 
+  // 🛡️ Validate phone format
+  if (typeof data.phone === "string" && !isValidPhone(data.phone)) {
+    errors.push("phone must contain only digits, dashes, plus signs, and spaces");
+  }
+  if (typeof data.phone2 === "string" && data.phone2 !== null && !isValidPhone(data.phone2 as string)) {
+    errors.push("phone2 must contain only digits, dashes, plus signs, and spaces");
+  }
+
+  // 🛡️ Validate link URL (prevent javascript: protocol XSS)
+  if (typeof normalizedBody.link === "string" && normalizedBody.link.trim().length > 0) {
+    const safeUrl = sanitizeUrl(normalizedBody.link as string);
+    if (safeUrl === null) {
+      errors.push("link must be a valid http:// or https:// URL");
+    } else {
+      data.link = safeUrl;
+    }
+  }
+
   if (!data.province) {
     data.province = "ลพบุรี";
   }
@@ -219,14 +238,17 @@ export function parsePagination(searchParams: URLSearchParams) {
 }
 
 function normalizeBody(body: RequestBody): RequestBody {
-  if (!("meterOption" in body) && "metrerOption" in body) {
-    return {
-      ...body,
-      meterOption: body.metrerOption,
+  let normalized = body;
+
+  if (!("meterOption" in normalized) && "metrerOption" in normalized) {
+    normalized = {
+      ...normalized,
+      meterOption: normalized.metrerOption,
     };
   }
 
-  return body;
+  // 🛡️ Sanitize all string inputs (strip HTML, enforce max length)
+  return sanitizeRequestBody(normalized);
 }
 
 function isRequiredStringField(
