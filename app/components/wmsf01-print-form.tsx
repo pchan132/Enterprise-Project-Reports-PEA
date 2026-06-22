@@ -133,10 +133,20 @@ export default function WMSF01PrintForm({
         format: "a4",
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let pdfWidth = pdf.internal.pageSize.getWidth();
+      let pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      // ถ้าความสูงเกิน 1 หน้า (A4) ให้ย่อสเกลลงมาให้พอดี
+      if (pdfHeight > pageHeight) {
+        pdfHeight = pageHeight;
+        pdfWidth = (canvas.width * pdfHeight) / canvas.height;
+      }
+      
+      const xOffset = (pdf.internal.pageSize.getWidth() - pdfWidth) / 2;
+      const yOffset = 0; // หรือถ้าจะให้อยู่ตรงกลางแนวตั้ง: (pageHeight - pdfHeight) / 2
+
+      pdf.addImage(imgData, "PNG", xOffset, yOffset, pdfWidth, pdfHeight);
 
       const filename = request?.requestNo
         ? `WMSF01-${request.requestNo}.pdf`
@@ -269,7 +279,7 @@ export default function WMSF01PrintForm({
           <div
             ref={printAreaRef}
             id="wmsf01-print-area"
-            className="wmsf01-page relative w-[210mm] min-h-[297mm] bg-white text-black px-[15mm] py-[10mm] shadow-2xl print:shadow-none print:px-0 print:py-0"
+            className="wmsf01-page relative w-[210mm] max-w-[210mm] min-h-[297mm] bg-white text-black px-[12mm] py-[8mm] shadow-2xl print:shadow-none print:px-0 print:py-0 overflow-hidden"
             style={{ fontFamily: "'TH Sarabun New', 'Sarabun', 'Tahoma', sans-serif" }}
           >
             <div className="absolute right-16 top-16 font-bold">
@@ -354,7 +364,7 @@ export default function WMSF01PrintForm({
               <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
                 <div className="flex flex-1 items-end gap-1">
                   <span className="shrink-0">เบอร์โทรสำรอง</span>
-                  <span className="flex-1 border-b border-dotted border-black min-h-[1.2em] px-1 font-bold text-lg ">
+                  <span className="flex-1 border-b border-dotted border-black min-h-[1.2em] px-1 font-bold text-lg">
                     {request?.phone2 ?? ""}
                   </span>
                 </div>
@@ -369,10 +379,10 @@ export default function WMSF01PrintForm({
 
             {/* ─── SECTION 1 ─── */}
             <div className="mb-3">
-              <h2 className="mb-1 text-3xl font-bold">
+              <h2 className="mb-1 text-xl font-bold">
                 ส่วนที่ 1 ของผู้สำรวจ (ผบค.)
               </h2>
-              <table className="w-full border-collapse text-sm">
+              <table className="w-full border-collapse text-lg">
                 <thead>
                   <tr>
                     <th className="w-[40px] border border-black bg-gray-50 px-2 py-1 text-center font-bold">
@@ -392,10 +402,10 @@ export default function WMSF01PrintForm({
                       <td className="border border-black text-center font-bold">
                         {item.no}
                       </td>
-                      <td className="border border-black px-2 text-xl font-bold">
+                      <td className="border border-black px-2 py-0.5 text-lg font-bold leading-tight">
                         {item.label}
                       </td>
-                      <td className="border border-black px-2 text-xl font-bold">
+                      <td className="border border-black px-2 py-0.5 text-lg font-bold leading-tight">
                         {item.data ?? ""}
                       </td>
                     </tr>
@@ -406,10 +416,10 @@ export default function WMSF01PrintForm({
 
             {/* ─── SECTION 2 ─── */}
             <div className="mt-4">
-              <h2 className="mb-1 text-2xl font-bold">
+              <h2 className="mb-1 text-xl font-bold">
                 ส่วนที่ 2 ของผู้ติดตั้ง สับเปลี่ยน รื้อถอน ต่อกลับ ตัดฝาก (ผมต.)
               </h2>
-              <table className="w-full border-collapse text-sm">
+              <table className="w-full border-collapse text-lg">
                 <thead>
                   <tr>
                     <th className="w-[40px] border border-black bg-gray-50 px-2 text-center font-bold">
@@ -426,13 +436,13 @@ export default function WMSF01PrintForm({
                 <tbody>
                   {section2Items.map((item) => (
                     <tr key={item.no}>
-                      <td className="border border-black px-2 text-center text-lg">
+                      <td className="border border-black px-2 py-0.5 text-center text-lg leading-tight">
                         {item.no}
                       </td>
-                      <td className="border border-black px-2 text-xl font-bold">
+                      <td className="border border-black px-2 py-0.5 text-lg font-bold leading-tight">
                         {item.label}
                       </td>
-                      <td className="border border-black px-2 py-1 text-lg">
+                      <td className="border border-black px-2 py-0.5 text-lg leading-tight">
                         {item.data ?? ""}
                       </td>
                     </tr>
@@ -444,8 +454,8 @@ export default function WMSF01PrintForm({
             {/* ─── Footer signature area ─── */}
             <div className="mt-6 flex justify-between text-sm">
               <div></div>
-              <div className="flex gap-4 font-bold text-2xl">
-               <div className="text-center ">
+              <div className="flex gap-4 font-bold text-lg">
+               <div className="text-center">
                 Lat {request?.lat}
                 </div>
                 <div className="text-center">
