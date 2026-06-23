@@ -68,9 +68,8 @@ function buildLineMessage(
     `🏷️ สถานะ: ${request.status}`,
     "",
     `👤 ผู้ขอ: ${request.firstName} ${request.lastName}`,
-    `📞 เบอร์โทร: ${request.phone}`,
     `📍 พื้นที่: ต.${request.subDistrict} อ.${request.district}`,
-    "",
+    `📞 เบอร์โทร: ${request.phone}`,
   ];
   // Add meter, PEA No, CA Ref No, and Link
   if (request.phone2) {
@@ -78,6 +77,7 @@ function buildLineMessage(
   }
   lines.push("");
   lines.push(`📝 ประเภท: ${requestType}`);
+  lines.push("");
   if (request.meterOption) {
     lines.push(`🔌 ขนาดมิเตอร์: ${request.meterOption}`);
   }

@@ -14,7 +14,9 @@ import {
   RefreshCw,
   Flame,
   Users,
+  Send,
 } from "lucide-react";
+import LineReportModal from "../components/line-report-modal";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -237,6 +239,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isLineModalOpen, setIsLineModalOpen] = useState(false);
 
   const fetchDashboard = async () => {
     setLoading(true);
@@ -296,17 +299,25 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Total badge + Refresh */}
+          {/* Total badge + Refresh + Line */}
           <div className="flex items-center gap-3">
             {data && (
               <div className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-4 py-2 text-white shadow-md">
                 <Users className="h-4 w-4 opacity-80" />
-                <span className="text-sm font-medium">คำร้องทั้งหมด</span>
+                <span className="text-sm font-medium hidden sm:inline">คำร้องทั้งหมด</span>
                 <span className="text-lg font-extrabold">
                   {data.total.toLocaleString("th-TH")}
                 </span>
               </div>
             )}
+            <button
+              onClick={() => setIsLineModalOpen(true)}
+              className="flex h-10 items-center gap-2 rounded-xl border border-emerald-500 bg-emerald-50 px-3 text-sm font-bold text-emerald-700 shadow-sm transition-all hover:bg-emerald-100 hover:shadow-md sm:px-4"
+              title="ส่งรายงานคำร้องเข้า LINE"
+            >
+              <Send className="h-4 w-4" />
+              <span className="hidden sm:inline">ส่งรายงาน</span>
+            </button>
             <button
               onClick={fetchDashboard}
               disabled={loading}
@@ -542,6 +553,11 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      <LineReportModal 
+        isOpen={isLineModalOpen} 
+        onClose={() => setIsLineModalOpen(false)} 
+      />
     </div>
   );
 }
