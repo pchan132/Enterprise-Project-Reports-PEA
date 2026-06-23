@@ -208,7 +208,7 @@ export default function RequestForm({ mode = "create", requestId }: RequestFormP
   const [initialLoading, setInitialLoading] = useState(isEdit);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [sendLineNotify, setSendLineNotify] = useState(true);
+  const [sendLineNotify, setSendLineNotify] = useState(mode === "edit");
   const [formData, setFormData] = useState<RequestFormData>(() => emptyFormData());
   const [showPrintForm, setShowPrintForm] = useState(false);
 
